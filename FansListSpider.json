@@ -1,0 +1,22 @@
+{
+    "task_id":{
+        "type":"string",
+        "necessary":true,
+        "description":"任务id"
+    },
+    "uid":{
+        "type":"int10",
+        "necessary":true,
+        "description":"目标用户uid"
+    },
+    "fans_end":{
+        "type":"int",
+        "necessary":false,
+        "description":"爬取粉丝列表的页数，为空则默认爬取全部"
+    },
+    "follows_end":{
+        "type":"int",
+        "necessary":false,
+        "description":"爬取关注列表的页数，为空则默认爬取全部"
+    }
+}
