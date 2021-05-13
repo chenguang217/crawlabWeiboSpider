@@ -118,11 +118,13 @@ class FansListSpider(RedisSpider):
                     if card['card_type'] == 10:
                         # fans_item['fan'] = card['user']
                         # fans_item['uid'] = response.meta['__uid']
+                        fans_item['dataType'] = '2'
                         fans_item['s_id'] = card['user']['id']
                         fans_item['t_id'] = response.meta['__uid']
                         yield fans_item
                         user_info = card['user']
                         # user_info_item['user_info'] = user_info
+                        user_info_item['dataType'] = '0'
                         user_info_item['task_id'] = self.__task_id
                         user_info_item['uid'] = user_info['id']
                         user_info_item['screen_name'] = user_info['screen_name']
@@ -155,11 +157,13 @@ class FansListSpider(RedisSpider):
                         # follows_list.append([card['user']])
                         # follows_item['follower'] = card['user']
                         # follows_item['uid'] = response.meta['__uid']
+                        fans_item['dataType'] = '2'
                         fans_item['s_id'] = response.meta['__uid']
                         fans_item['t_id'] = card['user']['id']
                         yield fans_item
                         user_info = card['user']
                         # user_info_item['user_info'] = user_info
+                        user_info_item['dataType'] = '0'
                         user_info_item['task_id'] = self.__task_id
                         user_info_item['uid'] = user_info['id']
                         user_info_item['screen_name'] = user_info['screen_name']

@@ -11,6 +11,7 @@ import scrapy
 class UserInfoItem(scrapy.Item):
     # Item for user's profile information
     # user_info = scrapy.Field()
+    dataType = scrapy.Field()
     task_id = scrapy.Field()  # 任务id
     uid = scrapy.Field()
     screen_name = scrapy.Field()
@@ -27,6 +28,7 @@ class UserInfoItem(scrapy.Item):
 
 class TotalNumItem(scrapy.Item):
     # Item for user's post num
+    dataType = scrapy.Field()
     uid = scrapy.Field()
     total_num = scrapy.Field()
 
@@ -34,6 +36,7 @@ class TotalNumItem(scrapy.Item):
 class UserPostItem(scrapy.Item):
     # Item for user's post content
     # user_post = scrapy.Field()
+    dataType = scrapy.Field()
     task_id = scrapy.Field()  # 任务id
     mid = scrapy.Field()  # 推文id
     uid = scrapy.Field()  # 用户id
@@ -60,6 +63,7 @@ class UserPostItem(scrapy.Item):
 
 
 class FansListItem(scrapy.Item):
+    dataType = scrapy.Field()
     task_id = scrapy.Field()  # 任务id
     uid = scrapy.Field()
     fan = scrapy.Field()

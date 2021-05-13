@@ -115,12 +115,13 @@ class WeiboSpider(RedisSpider):
         user_info = json.loads(response.text)['data']['userInfo']
         del user_info['toolbar_menus']
         # crawl the total number of this user
-        total_item = TotalNumItem()
-        total_item['uid'] = self.__uid
-        total_item['total_num'] = user_info['statuses_count']  # total number of user posts
-        yield total_item
+        # total_item = TotalNumItem()
+        # total_item['uid'] = self.__uid
+        # total_item['total_num'] = user_info['statuses_count']  # total number of user posts
+        # yield total_item
         user_info_item = UserInfoItem()
         # user_info_item['user_info'] = user_info
+        user_info_item['dataType'] = '0'
         user_info_item['task_id'] = self.__task_id
         user_info_item['uid'] = user_info['id']
         user_info_item['screen_name'] = user_info['screen_name']
@@ -214,6 +215,7 @@ class WeiboSpider(RedisSpider):
 
     def parse_field(self, item):
         user_post_item = UserPostItem()
+        user_post_item['dataType'] = '1'
         user_post_item['task_id'] = self.__task_id
         user_post_item['mid'] = item['mid']
         user_post_item['uid'] = item['user']['id']

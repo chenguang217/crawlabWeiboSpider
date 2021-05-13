@@ -144,6 +144,7 @@ class KeyWordsSpider(RedisSpider):
 
     def parse_field(self, item):
         user_post_item = UserPostItem()
+        user_post_item['dataType'] = '1'
         user_post_item['mid'] = item['mid']
         user_post_item['task_id'] = self.__task_id
         user_post_item['uid'] = item['user']['id']
@@ -154,6 +155,7 @@ class KeyWordsSpider(RedisSpider):
         user_post_item['comments_count'] = item['comments_count']
         user_post_item['attitudes_count'] = item['attitudes_count']
         user_post_item['pic_num'] = item['pic_num']
+        user_post_item['video'] = item['video']
         if item['pic_num'] > 0:
             user_post_item['pics'] = item['pics']
         else:
