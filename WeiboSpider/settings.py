@@ -15,7 +15,7 @@ BOT_NAME = 'WeiboSpider'
 SPIDER_MODULES = ['WeiboSpider.spiders']
 NEWSPIDER_MODULE = 'WeiboSpider.spiders'
 
-LOG_FILE = "Weibo_Spider.log"
+# LOG_FILE = "Weibo_Spider.log"
 LOG_LEVEL = "INFO"
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
