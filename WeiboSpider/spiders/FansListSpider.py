@@ -5,6 +5,8 @@ import redis
 from scrapy.utils.project import get_project_settings
 from scrapy_redis.spiders import RedisSpider
 from ..items import *
+import ssl
+ssl._create_default_https_context = ssl._create_unverified_context
 
 
 class FansListSpider(RedisSpider):

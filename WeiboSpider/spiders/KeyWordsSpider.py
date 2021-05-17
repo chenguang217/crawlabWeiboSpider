@@ -20,6 +20,8 @@ from ..items import UserPostItem
 from scrapy_redis.spiders import RedisSpider
 from scrapy.utils.project import get_project_settings
 from urllib.request import urlretrieve
+import ssl
+ssl._create_default_https_context = ssl._create_unverified_context
 
 
 class KeyWordsSpider(RedisSpider):
