@@ -148,7 +148,7 @@ class KeyWordsSpider(RedisSpider):
         user_post_item = UserPostItem()
         user_post_item['dataType'] = '1'
         user_post_item['mid'] = item['mid']
-        user_post_item['task_id'] = self.__task_id
+        user_post_item['uu_id'] = self.__task_id
         user_post_item['uid'] = item['user']['id']
         user_post_item['text'] = item['text']
         user_post_item['created_at'] = item['created_at']

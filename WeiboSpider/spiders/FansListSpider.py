@@ -112,7 +112,7 @@ class FansListSpider(RedisSpider):
         fans_item = FansListItem()
         user_info_item = UserInfoItem()
         #  fans_item['uid'] = response.meta['__uid']
-        fans_item['task_id'] = self.__task_id
+        fans_item['uu_id'] = self.__task_id
         # fans_list = []
         for crd in cards:
             if crd['card_type'] == 11:
@@ -127,7 +127,7 @@ class FansListSpider(RedisSpider):
                         user_info = card['user']
                         # user_info_item['user_info'] = user_info
                         user_info_item['dataType'] = '0'
-                        user_info_item['task_id'] = self.__task_id
+                        user_info_item['uu_id'] = self.__task_id
                         user_info_item['uid'] = user_info['id']
                         user_info_item['screen_name'] = user_info['screen_name']
                         user_info_item['avatar_hd'] = user_info['avatar_hd']
@@ -149,7 +149,7 @@ class FansListSpider(RedisSpider):
         cards = json.loads(response.text)['data']['cards']
         fans_item = FansListItem()
         # fans_item['uid'] = response.meta['__uid']
-        fans_item['task_id'] = self.__task_id
+        fans_item['uu_id'] = self.__task_id
         user_info_item = UserInfoItem()
         # follows_list = []
         for crd in cards:
@@ -166,7 +166,7 @@ class FansListSpider(RedisSpider):
                         user_info = card['user']
                         # user_info_item['user_info'] = user_info
                         user_info_item['dataType'] = '0'
-                        user_info_item['task_id'] = self.__task_id
+                        user_info_item['uu_id'] = self.__task_id
                         user_info_item['uid'] = user_info['id']
                         user_info_item['screen_name'] = user_info['screen_name']
                         user_info_item['avatar_hd'] = user_info['avatar_hd']

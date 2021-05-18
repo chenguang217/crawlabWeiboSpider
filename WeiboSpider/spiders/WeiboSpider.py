@@ -124,7 +124,7 @@ class WeiboSpider(RedisSpider):
         user_info_item = UserInfoItem()
         # user_info_item['user_info'] = user_info
         user_info_item['dataType'] = '0'
-        user_info_item['task_id'] = self.__task_id
+        user_info_item['uu_id'] = self.__task_id
         user_info_item['uid'] = user_info['id']
         user_info_item['screen_name'] = user_info['screen_name']
         user_info_item['description'] = user_info['description']
@@ -218,7 +218,7 @@ class WeiboSpider(RedisSpider):
     def parse_field(self, item):
         user_post_item = UserPostItem()
         user_post_item['dataType'] = '1'
-        user_post_item['task_id'] = self.__task_id
+        user_post_item['uu_id'] = self.__task_id
         user_post_item['mid'] = item['mid']
         user_post_item['uid'] = item['user']['id']
         user_post_item['text'] = item['text']

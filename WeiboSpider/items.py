@@ -12,7 +12,7 @@ class UserInfoItem(scrapy.Item):
     # Item for user's profile information
     # user_info = scrapy.Field()
     dataType = scrapy.Field()
-    task_id = scrapy.Field()  # 任务id
+    uu_id = scrapy.Field()  # 任务id
     uid = scrapy.Field()
     screen_name = scrapy.Field()
     avatar_hd = scrapy.Field()
@@ -37,7 +37,7 @@ class UserPostItem(scrapy.Item):
     # Item for user's post content
     # user_post = scrapy.Field()
     dataType = scrapy.Field()
-    task_id = scrapy.Field()  # 任务id
+    uu_id = scrapy.Field()  # 任务id
     mid = scrapy.Field()  # 推文id
     uid = scrapy.Field()  # 用户id
     text = scrapy.Field()  # 推文文本
@@ -64,7 +64,7 @@ class UserPostItem(scrapy.Item):
 
 class FansListItem(scrapy.Item):
     dataType = scrapy.Field()
-    task_id = scrapy.Field()  # 任务id
+    uu_id = scrapy.Field()  # 任务id
     uid = scrapy.Field()
     fan = scrapy.Field()
     s_id = scrapy.Field()
