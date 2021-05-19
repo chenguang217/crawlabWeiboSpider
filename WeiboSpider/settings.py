@@ -78,7 +78,7 @@ REDIS_HOST = '139.9.205.93'
 # REDIS_PARAMS = {
 #             'password': '123456',
 #         }
-REDIS_PORT = 6379
+REDIS_PORT = 6381
 
 # Enable or disable extensions
 # See https://doc.scrapy.org/en/latest/topics/extensions.html
