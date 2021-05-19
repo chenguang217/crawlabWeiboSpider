@@ -146,7 +146,7 @@ class KeyWordsSpider(RedisSpider):
 
     def parse_field(self, item):
         user_post_item = UserPostItem()
-        user_post_item['dataType'] = '1'
+        user_post_item['dataType'] = 1
         user_post_item['mid'] = item['mid']
         user_post_item['uu_id'] = self.__task_id
         user_post_item['uid'] = item['user']['id']
