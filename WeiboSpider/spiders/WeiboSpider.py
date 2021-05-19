@@ -46,7 +46,11 @@ class WeiboSpider(RedisSpider):
             # 向Redis存入初始请求
             user_info_url = self.crawling_user_info()  # 拼接用户信息URL
             # 获取总页数
-            page_num = self.parse_page_num(user_info_url)
+            # page_num = self.parse_page_num(user_info_url)
+            for i in range(5):
+                page_num = self.parse_page_num(user_info_url)
+                if page_num > 1:
+                    break
             print(page_num, page)
             self.__weibo_page_range = min(page_num, int(page))
             # r.lpush(self.redis_key, user_info_url)

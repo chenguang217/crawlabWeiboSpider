@@ -58,7 +58,11 @@ class KeyWordsSpider(RedisSpider):
                            self.api['api_3'] + str(time_stamp) + self.api['api_4']
             u = url_template + str('1')
             print(u)
-            page_num = self.parse_page_num(u)
+            # page_num = self.parse_page_num(u)
+            for i in range(5):
+                page_num = self.parse_page_num(u)
+                if page_num > 1:
+                    break
             self.page_num = min(page_num, int(page))
             print(self.page_num)
             # self.page_num = 5
