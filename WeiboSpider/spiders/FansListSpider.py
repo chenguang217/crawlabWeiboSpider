@@ -15,17 +15,17 @@ class FansListSpider(RedisSpider):
     handle_httpstatus_list = [418]
     redis_key = 'FansListSpider:start_urls'
 
-    def __init__(self, uid, node='master', task_id='test', fans_end=50, follows_end=50, *args, **kwargs):
+    def __init__(self, uid, node='master', uu_id='test', fans_end=50, follows_end=50, *args, **kwargs):
         super(FansListSpider, self).__init__(*args, **kwargs)
         self.uid = uid
-        self.__task_id = task_id
+        self.__task_id = uu_id
         self.start_urls = ['https://m.weibo.cn/']
         self.root_url = 'https://m.weibo.cn/'
         self.api = {'common_api': 'api/container/getIndex?containerid=231051', 'fans_api_0': '_-_fans_-_',
                     'fans_api_1': '&since_id=', 'follows_api_0': '_-_followers_-_', 'follows_api_1': '&page='}
 
         self.__user_info_api = {'api_0': 'api/container/getIndex?type=__uid&value=', 'api_1': '&containerid=100505'}
-        self.redis_key = self.redis_key + task_id
+        self.redis_key = self.redis_key + uu_id
 
         if node == 'master':
             settings = get_project_settings()

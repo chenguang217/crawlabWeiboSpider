@@ -31,9 +31,9 @@ class KeyWordsSpider(RedisSpider):
     handle_httpstatus_list = [418]  # http status code for not ignoring
     redis_key = 'KeyWordsSpider:start_urls'
 
-    def __init__(self, keyword, node='master', task_id='test', page=50, *args, **kwargs):
+    def __init__(self, keyword, node='master', uu_id='test', page=50, *args, **kwargs):
         super(KeyWordsSpider, self).__init__(*args, **kwargs)
-        self.__task_id = task_id
+        self.__task_id = uu_id
         self.api = {
             'api_0': 'https://m.weibo.cn/api/container/getIndex?containerid=100103type',
             'api_1': '=61&q=',  # append keywords behind and url code this sentences
@@ -47,7 +47,7 @@ class KeyWordsSpider(RedisSpider):
                                  'longtext_api': 'https://m.weibo.cn/statuses/extend?id=',
                                  'precise_time_api': 'https://m.weibo.cn/status/'}
         self.keyword = keyword
-        self.redis_key = self.redis_key+task_id
+        self.redis_key = self.redis_key+uu_id
 
         if node == 'master':
             settings = get_project_settings()

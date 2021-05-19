@@ -23,18 +23,18 @@ class WeiboSpider(RedisSpider):
     handle_httpstatus_list = [418]  # http status code for not ignoring
     redis_key = 'WeiboSpider:start_urls'
 
-    def __init__(self, uid, node='master', task_id='1996', page=199, *args, **kwargs):
+    def __init__(self, uid, node='master', uu_id='1996', page=199, *args, **kwargs):
         super(WeiboSpider, self).__init__(*args, **kwargs)
         self.start_urls = ['https://m.weibo.cn/']
         self.__uid = uid
-        self.__task_id = task_id
+        self.__task_id = uu_id
         self.__user_info_api = {'api_0': 'api/container/getIndex?type=__uid&value=', 'api_1': '&containerid=100505'}
         self.__weibo_info_api = {'api_0': 'api/container/getIndex?type=__uid&value=',
                                  'api_1': '&containerid=107603', 'api_2': '&page=',
                                  'longtext_api': 'https://m.weibo.cn/statuses/extend?id=',
                                  'precise_time_api': 'https://m.weibo.cn/status/'}
         self.__weibo_page_range = int(page)
-        self.redis_key = self.redis_key+task_id
+        self.redis_key = self.redis_key+uu_id
 
         if node == 'master':
             # 获取redis连接
