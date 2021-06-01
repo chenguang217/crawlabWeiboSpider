@@ -23,7 +23,7 @@ class WeiboSpider(RedisSpider):
     handle_httpstatus_list = [418]  # http status code for not ignoring
     redis_key = 'WeiboSpider:start_urls'
 
-    def __init__(self, uid, node='master', uu_id='1996', page=199, *args, **kwargs):
+    def __init__(self, uid, node='master', uu_id='1996', page=199, crawl_image=False, crawl_video=False, *args, **kwargs):
         super(WeiboSpider, self).__init__(*args, **kwargs)
         self.start_urls = ['https://m.weibo.cn/']
         self.__uid = uid
@@ -35,6 +35,8 @@ class WeiboSpider(RedisSpider):
                                  'precise_time_api': 'https://m.weibo.cn/status/'}
         self.__weibo_page_range = int(page)
         self.redis_key = self.redis_key+uu_id
+        self.crawl_image = crawl_image
+        self.crawl_video = crawl_video
 
         if node == 'master':
             # 获取redis连接
@@ -155,30 +157,32 @@ class WeiboSpider(RedisSpider):
                 # only card_type equals 9, we need
                 mblog = card['mblog']
                 # 爬取图片
-                for i in range(min(9, mblog['pic_num'])):
-                    pic = mblog['pics'][i]
-                    pic_url = 'https://wx3.sinaimg.cn/large/'+pic['pid']+'.jpg'
-                    # pic_url = pic['url']
-                    # urlretrieve(pic_url, './img/posts/' + self.__task_id + '_' + mblog['mid'] + '_' + str(i) + '.jpg')
-                    if not os.path.exists('/data/' + self.__task_id + '/img/'):
-                        os.makedirs('/data/' + self.__task_id + '/img/')
-                    urlretrieve(pic_url, '/data/' + self.__task_id + '/img/' + mblog['mid'] + '_' + str(i) + '.jpg')
-                    mblog['pics'][i] = '/data/' + self.__task_id + '/img/' + mblog['mid'] + '_' + str(i) + '.jpg'
+                if self.crawl_image:
+                    for i in range(min(9, mblog['pic_num'])):
+                        pic = mblog['pics'][i]
+                        pic_url = 'https://wx3.sinaimg.cn/large/'+pic['pid']+'.jpg'
+                        # pic_url = pic['url']
+                        # urlretrieve(pic_url, './img/posts/' + self.__task_id + '_' + mblog['mid'] + '_' + str(i) + '.jpg')
+                        if not os.path.exists('/data/' + self.__task_id + '/img/'):
+                            os.makedirs('/data/' + self.__task_id + '/img/')
+                        urlretrieve(pic_url, '/data/' + self.__task_id + '/img/' + mblog['mid'] + '_' + str(i) + '.jpg')
+                        mblog['pics'][i] = '/data/' + self.__task_id + '/img/' + mblog['mid'] + '_' + str(i) + '.jpg'
                 #  下载视频
-                if 'page_info' in mblog and mblog['page_info']['type'] == 'video':
-                    vidoe_url = mblog['page_info']['media_info']['stream_url_hd']
-                    res = requests.get(vidoe_url, stream=True)
-                    if not os.path.exists('/data/' + self.__task_id + '/video/'):
-                        os.makedirs('/data/' + self.__task_id + '/video/')
-                    # with open('./video/' + self.__task_id + '_' + mblog['mid']+'.mp4', "wb") as mp4:
-                    with open('/data/' + self.__task_id + '/video/' + mblog['mid']+'.mp4', "wb") as mp4:
-                        for chunk in res.iter_content(
-                                chunk_size=1024 * 1024):
-                            if chunk:
-                                mp4.write(chunk)
-                    mblog['video'] = '/data/' + self.__task_id + '/video/' + mblog['mid']+'.mp4'
-                else:
-                    mblog['video'] = None
+                if self.crawl_video:
+                    if 'page_info' in mblog and mblog['page_info']['type'] == 'video':
+                        vidoe_url = mblog['page_info']['media_info']['stream_url_hd']
+                        res = requests.get(vidoe_url, stream=True)
+                        if not os.path.exists('/data/' + self.__task_id + '/video/'):
+                            os.makedirs('/data/' + self.__task_id + '/video/')
+                        # with open('./video/' + self.__task_id + '_' + mblog['mid']+'.mp4', "wb") as mp4:
+                        with open('/data/' + self.__task_id + '/video/' + mblog['mid']+'.mp4', "wb") as mp4:
+                            for chunk in res.iter_content(
+                                    chunk_size=1024 * 1024):
+                                if chunk:
+                                    mp4.write(chunk)
+                        mblog['video'] = '/data/' + self.__task_id + '/video/' + mblog['mid']+'.mp4'
+                    else:
+                        mblog['video'] = None
 
                 if mblog['isLongText']:
                     longtext_url = self.__weibo_info_api['longtext_api'] + mblog['id']

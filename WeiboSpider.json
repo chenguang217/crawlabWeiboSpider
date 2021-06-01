@@ -4,6 +4,16 @@
         "necessary":true,
         "description":"目标用户uid"
     },
+        "crawl_image":{
+        "type":"boolean",
+        "necessary":true,
+        "description":"是否爬取图片"
+    },
+    "crawl_video":{
+        "type":"boolean",
+        "necessary":true,
+        "description":"是否爬取视频"
+    },
     "url":{
         "type":"string",
         "necessary":true,
