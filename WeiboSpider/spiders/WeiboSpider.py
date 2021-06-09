@@ -209,7 +209,8 @@ class WeiboSpider(RedisSpider):
             user_post_item['text'] = data['longTextContent']
             item = self.parse_field(user_post_item)
         except:
-            item = None
+            # item = None
+            return
 
         yield item
 
