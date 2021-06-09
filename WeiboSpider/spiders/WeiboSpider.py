@@ -23,10 +23,11 @@ class WeiboSpider(RedisSpider):
     handle_httpstatus_list = [418]  # http status code for not ignoring
     redis_key = 'WeiboSpider:start_urls'
 
-    def __init__(self, uid, node='master', uu_id='1996', page=199, crawl_image=False, crawl_video=False, *args, **kwargs):
+    def __init__(self, uid="2653906910|5864631680", node='master', uu_id='1996', page=199, crawl_image=False, crawl_video=False, *args, **kwargs):
         super(WeiboSpider, self).__init__(*args, **kwargs)
         self.start_urls = ['https://m.weibo.cn/']
-        self.__uid = uid
+        self.__uid_list = list(filter(None, uid.split('|')))
+        # self.__uid = uid
         self.__task_id = uu_id
         self.__user_info_api = {'api_0': 'api/container/getIndex?type=__uid&value=', 'api_1': '&containerid=100505'}
         self.__weibo_info_api = {'api_0': 'api/container/getIndex?type=__uid&value=',
@@ -45,33 +46,34 @@ class WeiboSpider(RedisSpider):
             settings = get_project_settings()
             r = redis.Redis(host=settings.get("REDIS_HOST"), port=settings.get("REDIS_PORT"), decode_responses=True)
 
-            # 向Redis存入初始请求
-            user_info_url = self.crawling_user_info()  # 拼接用户信息URL
-            # 获取总页数
-            # page_num = self.parse_page_num(user_info_url)
-            for i in range(5):
-                page_num = self.parse_page_num(user_info_url)
-                if page_num > 1:
-                    break
-            print(page_num, page)
-            self.__weibo_page_range = min(page_num, int(page))
-            # r.lpush(self.redis_key, user_info_url)
-            request_data = {
-                'url': user_info_url,
-                'callback': "parse_user",
-                'meta': {'repeat_times': 0}
-            }
-            r.lpush(self.redis_key, json.dumps(request_data))
-
-            weibo_info_urls = self.crawling_post_info()  # 拼接博文URL
-            for weibo_info_url in weibo_info_urls:
+            for u in self.__uid_list:
+                # 向Redis存入初始请求
+                user_info_url = self.crawling_user_info(u)  # 拼接用户信息URL
+                # 获取总页数
+                # page_num = self.parse_page_num(user_info_url)
+                for i in range(5):
+                    page_num = self.parse_page_num(user_info_url)
+                    if page_num > 1:
+                        break
+                print(page_num, page)
+                self.__weibo_page_range = min(page_num, int(page))
                 # r.lpush(self.redis_key, user_info_url)
                 request_data = {
-                    'url': weibo_info_url,
-                    'callback': "parse_post",
-                    'meta': None
+                    'url': user_info_url,
+                    'callback': "parse_user",
+                    'meta': {'repeat_times': 0}
                 }
                 r.lpush(self.redis_key, json.dumps(request_data))
+
+                weibo_info_urls = self.crawling_post_info(u)  # 拼接博文URL
+                for weibo_info_url in weibo_info_urls:
+                    # r.lpush(self.redis_key, user_info_url)
+                    request_data = {
+                        'url': weibo_info_url,
+                        'callback': "parse_post",
+                        'meta': None
+                    }
+                    r.lpush(self.redis_key, json.dumps(request_data))
             # time.sleep(2)
 
     def parse_page_num(self, url):
@@ -100,20 +102,20 @@ class WeiboSpider(RedisSpider):
         elif callback == "parse_post":
             return scrapy.Request(url=url, callback=self.parse_post, dont_filter=True)
 
-    def crawling_user_info(self):
+    def crawling_user_info(self, u):
         # to generate user's profile information url
         user_info_url = self.start_urls[0] + self.__user_info_api['api_0'] + \
-                        self.__uid + self.__user_info_api['api_1'] + self.__uid
+                        u + self.__user_info_api['api_1'] + u
         # print(user_info_url)
         return user_info_url
 
-    def crawling_post_info(self):
+    def crawling_post_info(self, u):
         # to generate user's tweet/post/weibo information url
         weibo_info_urls = []
         self.total_flag = 1
         for i in range(0, self.__weibo_page_range + 1):
-            weibo_info_url = self.start_urls[0] + self.__weibo_info_api['api_0'] + self.__uid + \
-                             self.__weibo_info_api['api_1'] + self.__uid + self.__weibo_info_api['api_2'] + str(i)
+            weibo_info_url = self.start_urls[0] + self.__weibo_info_api['api_0'] + u + \
+                             self.__weibo_info_api['api_1'] + u + self.__weibo_info_api['api_2'] + str(i)
             # print(weibo_info_url)
             weibo_info_urls.append(weibo_info_url)
         return weibo_info_urls
@@ -167,6 +169,8 @@ class WeiboSpider(RedisSpider):
                             os.makedirs('/data/' + self.__task_id + '/img/')
                         urlretrieve(pic_url, '/data/' + self.__task_id + '/img/' + mblog['mid'] + '_' + str(i) + '.jpg')
                         mblog['pics'][i] = '/data/' + self.__task_id + '/img/' + mblog['mid'] + '_' + str(i) + '.jpg'
+                else:
+                    mblog['pics'] = None
                 #  下载视频
                 if self.crawl_video:
                     if 'page_info' in mblog and mblog['page_info']['type'] == 'video':
@@ -183,6 +187,8 @@ class WeiboSpider(RedisSpider):
                         mblog['video'] = '/data/' + self.__task_id + '/video/' + mblog['mid']+'.mp4'
                     else:
                         mblog['video'] = None
+                else:
+                    mblog['video'] = None
 
                 if mblog['isLongText']:
                     longtext_url = self.__weibo_info_api['longtext_api'] + mblog['id']
@@ -198,9 +204,13 @@ class WeiboSpider(RedisSpider):
     def parse_longtext(self, response):
         # parser for longtext post
         user_post_item = response.meta['post_item']
-        data = json.loads(response.text)['data']
-        user_post_item['text'] = data['longTextContent']
-        item = self.parse_field(user_post_item)
+        try:
+            data = json.loads(response.text)['data']
+            user_post_item['text'] = data['longTextContent']
+            item = self.parse_field(user_post_item)
+        except:
+            item = None
+
         yield item
 
     # def get_precise_time(self, text):

@@ -118,6 +118,8 @@ class KeyWordsSpider(RedisSpider):
                             os.makedirs('/data/' + self.__task_id + '/img/')
                         urlretrieve(pic_url, '/data/' + self.__task_id + '/img/' + mblog['mid'] + '_' + str(i) + '.jpg')
                         mblog['pics'][i] = '/data/' + self.__task_id + '/img/' + mblog['mid'] + '_' + str(i) + '.jpg'
+                else:
+                    mblog['pics'] = None
 
                 if self.crawl_video:
                     #  下载视频
@@ -135,6 +137,8 @@ class KeyWordsSpider(RedisSpider):
                         mblog['video'] = '/data/' + self.__task_id + '/video/' + mblog['mid']+'.mp4'
                     else:
                         mblog['video'] = None
+                else:
+                    mblog['video'] = None
 
                     if mblog['isLongText']:
                         longtext_url = self.__weibo_info_api['longtext_api'] + mblog['id']
