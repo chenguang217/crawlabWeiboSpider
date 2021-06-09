@@ -4,15 +4,29 @@
         "necessary":true,
         "description":"目标关键字"
     },
+    "node":{
+        "type":"string",
+        "necessary":true,
+        "description":"爬虫类型",
+        "candidates":["master", "slave"]
+    },
     "crawl_image":{
         "type":"boolean",
         "necessary":true,
-        "description":"是否爬取图片"
+        "description":"是否爬取图片",
+        "candidates":["True", "False"]
     },
     "crawl_video":{
         "type":"boolean",
         "necessary":true,
-        "description":"是否爬取视频"
+        "description":"是否爬取视频",
+        "candidates":["True", "False"]
+    },
+    "important_user":{
+        "type":"boolean",
+        "necessary":true,
+        "description":"是否按重点用户爬取",
+        "candidates":["True", "False"]
     },
     "url":{
         "type":"string",
