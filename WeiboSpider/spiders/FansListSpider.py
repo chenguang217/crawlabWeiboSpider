@@ -17,7 +17,8 @@ class FansListSpider(RedisSpider):
 
     def __init__(self, uid, node='master', uu_id='test', fans_end=50, follows_end=50, *args, **kwargs):
         super(FansListSpider, self).__init__(*args, **kwargs)
-        self.uid = uid
+        # self.uid = uid
+        self.__uid_list = list(filter(None, uid.split('|')))
         self.__task_id = uu_id
         self.start_urls = ['https://m.weibo.cn/']
         self.root_url = 'https://m.weibo.cn/'
@@ -30,34 +31,34 @@ class FansListSpider(RedisSpider):
         if node == 'master':
             settings = get_project_settings()
             r = redis.Redis(host=settings.get("REDIS_HOST"), port=settings.get("REDIS_PORT"), decode_responses=True)
+            for u in self.__uid_list:
+                user_info_url = self.crawling_user_info(u)  # 拼接用户信息URL
+                # 获取总页数
+                followers_page_num, follow_page_num = self.parse_page_num(user_info_url)
+                followers_page_num = min(followers_page_num, int(fans_end))
+                follow_page_num = min(follow_page_num, int(follows_end))
+                print("followers_page_num", followers_page_num)
+                print("follow_page_num", follow_page_num)
+                self.page_range = {'fans': {'start': 1, 'end': followers_page_num}, 'follows': {'start': 1, 'end': follow_page_num}}
 
-            user_info_url = self.crawling_user_info()  # 拼接用户信息URL
-            # 获取总页数
-            followers_page_num, follow_page_num = self.parse_page_num(user_info_url)
-            followers_page_num = min(followers_page_num, int(fans_end))
-            follow_page_num = min(follow_page_num, int(follows_end))
-            print("followers_page_num", followers_page_num)
-            print("follow_page_num", follow_page_num)
-            self.page_range = {'fans': {'start': 1, 'end': followers_page_num}, 'follows': {'start': 1, 'end': follow_page_num}}
-
-            # 向Redis存入初始请求
-            fans_url, follows_url = self.crawl_one(uid)
-            for url in fans_url:
-                request_data = {
-                    'url': url,
-                    'callback': "parse_fans",
-                    'meta': {'__uid': uid}
-                }
-                r.lpush(self.redis_key, json.dumps(request_data))
-                # yield scrapy.Request(url=url, callback=self.parse_fans, meta={'__uid': uid})
-            for url in follows_url:
-                request_data = {
-                    'url': url,
-                    'callback': "parse_follows",
-                    'meta': {'__uid': uid}
-                }
-                r.lpush(self.redis_key, json.dumps(request_data))
-                # yield scrapy.Request(url=url, callback=self.parse_follows, meta={'__uid': uid})
+                # 向Redis存入初始请求
+                fans_url, follows_url = self.crawl_one(uid)
+                for url in fans_url:
+                    request_data = {
+                        'url': url,
+                        'callback': "parse_fans",
+                        'meta': {'__uid': uid}
+                    }
+                    r.lpush(self.redis_key, json.dumps(request_data))
+                    # yield scrapy.Request(url=url, callback=self.parse_fans, meta={'__uid': uid})
+                for url in follows_url:
+                    request_data = {
+                        'url': url,
+                        'callback': "parse_follows",
+                        'meta': {'__uid': uid}
+                    }
+                    r.lpush(self.redis_key, json.dumps(request_data))
+                    # yield scrapy.Request(url=url, callback=self.parse_follows, meta={'__uid': uid})
 
     # Override父类的make_request_from_data方法，解析json生成Request
     def make_request_from_data(self, data):
@@ -100,10 +101,10 @@ class FansListSpider(RedisSpider):
         )]
         return fans_urls, follows_url
 
-    def crawling_user_info(self):
+    def crawling_user_info(self, u):
         # to generate user's profile information url
         user_info_url = self.start_urls[0] + self.__user_info_api['api_0'] + \
-                        self.uid + self.__user_info_api['api_1'] + self.uid
+                        u + self.__user_info_api['api_1'] + u
         # print(user_info_url)
         return user_info_url
 
