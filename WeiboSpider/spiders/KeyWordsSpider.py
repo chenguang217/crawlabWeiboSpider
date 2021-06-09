@@ -8,14 +8,13 @@ import json
 import requests
 import scrapy
 import logging
+from ..database_tool import DBConnector
 import redis
 import re
 import os
-from lxml import etree
 from time import time
 from math import floor
 from urllib.parse import quote
-from .WeiboSpider import WeiboSpider
 from ..items import UserPostItem
 from scrapy_redis.spiders import RedisSpider
 from scrapy.utils.project import get_project_settings
@@ -31,7 +30,7 @@ class KeyWordsSpider(RedisSpider):
     handle_httpstatus_list = [418]  # http status code for not ignoring
     redis_key = 'KeyWordsSpider:start_urls'
 
-    def __init__(self, keyword, node='master', uu_id='test', page=50, crawl_image=False, crawl_video=False, *args, **kwargs):
+    def __init__(self, keyword, node='master', uu_id='test', page=50, crawl_image=False, crawl_video=False, important_user=False, *args, **kwargs):
         super(KeyWordsSpider, self).__init__(*args, **kwargs)
         self.__task_id = uu_id
         self.api = {
@@ -50,6 +49,9 @@ class KeyWordsSpider(RedisSpider):
         self.redis_key = self.redis_key+uu_id
         self.crawl_image = crawl_image
         self.crawl_video = crawl_video
+        self.important_user = important_user
+        if important_user:
+            self.uid_list = self.get_important_user()
 
         if node == 'master':
             settings = get_project_settings()
@@ -105,7 +107,8 @@ class KeyWordsSpider(RedisSpider):
         for card in cards:
             if card['card_type'] == 9:
                 mblog = card['mblog']
-
+                if self.important_user and mblog['user']['id'] not in self.uid_list:
+                    return
                 # 爬取图片
                 if self.crawl_image:
                     for i in range(min(9, mblog['pic_num'])):
@@ -151,9 +154,12 @@ class KeyWordsSpider(RedisSpider):
     def parse_longtext(self, response):
         # parser for longtext post
         user_post_item = response.meta['post_item']
-        data = json.loads(response.text)['data']
-        user_post_item['text'] = data['longTextContent']
-        item = self.parse_field(user_post_item)
+        try:
+            data = json.loads(response.text)['data']
+            user_post_item['text'] = data['longTextContent']
+            item = self.parse_field(user_post_item)
+        except:
+            return
         yield item
 
     def parse_field(self, item):
@@ -176,3 +182,9 @@ class KeyWordsSpider(RedisSpider):
             user_post_item['pics'] = None
         return user_post_item
 
+    def get_important_user(self):
+        db_connector = DBConnector()
+        db, client = db_connector.create_mongo_connection()
+        uid_list = db['uidList'].find()
+        uid_list = list(uid_list[0].keys())[1:]
+        return uid_list
