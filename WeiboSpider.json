@@ -1,23 +1,17 @@
 {
     "uid":{
-        "type":"int10",
+        "type":"string",
         "necessary":true,
         "description":"目标用户uid"
     },
-    "node":{
-        "type":"string",
-        "necessary":true,
-        "description":"爬虫类型",
-        "candidates":["master", "slave"]
-    },
     "crawl_image":{
-        "type":"boolean",
+        "type":"select",
         "necessary":true,
         "description":"是否爬取图片",
         "candidates":["True", "False"]
     },
     "crawl_video":{
-        "type":"boolean",
+        "type":"select",
         "necessary":true,
         "description":"是否爬取视频",
         "candidates":["True", "False"]

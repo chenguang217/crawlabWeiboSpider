@@ -1,11 +1,11 @@
 {
     "uid":{
-        "type":"int10",
+        "type":"string",
         "necessary":true,
         "description":"目标用户uid"
     },
     "node":{
-        "type":"string",
+        "type":"select",
         "necessary":true,
         "description":"爬虫类型",
         "candidates":["master", "slave"]

@@ -55,7 +55,7 @@ class WeiboSpider(RedisSpider):
                     page_num = self.parse_page_num(user_info_url)
                     if page_num > 1:
                         break
-                print(page_num, page)
+                # print(page_num, page)
                 self.__weibo_page_range = min(page_num, int(page))
                 # r.lpush(self.redis_key, user_info_url)
                 request_data = {
