@@ -20,7 +20,7 @@ class DBConnector:
 
     def create_mongo_connection(self):
         # client = pymongo.MongoClient(self.mongo_host, self.mongo_port)
-        client = pymongo.MongoClient(self.mongo_host, self.mongo_host)
+        client = pymongo.MongoClient(self.mongo_host, self.mongo_port)
         database = client[self.mongo_database]
         # database.authenticate(self.mongo_user_name, self.mongo_pass_wd)
         return database, client
