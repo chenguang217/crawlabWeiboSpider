@@ -74,6 +74,10 @@ DUPEFILTER_DEBUG = True
 
 SCHEDULER_PERSIST = True
 
+MONGO_HOST = '127.0.0.1'
+MONGO_PORT = 27017
+DB_NAME = 'weibo'
+
 REDIS_HOST = '139.9.205.93'
 # REDIS_PARAMS = {
 #             'password': '123456',
