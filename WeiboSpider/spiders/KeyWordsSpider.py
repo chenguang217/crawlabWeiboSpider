@@ -19,6 +19,7 @@ from ..items import UserPostItem
 from scrapy_redis.spiders import RedisSpider
 from scrapy.utils.project import get_project_settings
 from urllib.request import urlretrieve
+from ..mongo_util import mongo_util
 import ssl
 ssl._create_default_https_context = ssl._create_unverified_context
 
@@ -52,6 +53,8 @@ class KeyWordsSpider(RedisSpider):
         self.important_user = important_user
         if important_user:
             self.uid_list = self.get_important_user()
+        if (crawl_image or crawl_video):
+            self.mongo = mongo_util()
 
         if node == 'master':
             settings = get_project_settings()
@@ -114,30 +117,32 @@ class KeyWordsSpider(RedisSpider):
                     for i in range(min(9, mblog['pic_num'])):
                         pic = mblog['pics'][i]
                         pic_url = 'https://wx3.sinaimg.cn/large/'+pic['pid']+'.jpg'
-                        # pic_url = pic['url']
-                        # urlretrieve(pic_url, './img/keywords/' + self.__task_id + '_' + mblog['mid'] + '_' + str(i) + '.jpg')
-                        # mblog['pics'][i] = './img/posts/' + self.__task_id + '_' + mblog['mid'] + '_' + str(i) + '.jpg'
-                        if not os.path.exists('/data/' + self.__task_id + '/img/'):
-                            os.makedirs('/data/' + self.__task_id + '/img/')
-                        urlretrieve(pic_url, '/data/' + self.__task_id + '/img/' + mblog['mid'] + '_' + str(i) + '.jpg')
-                        mblog['pics'][i] = '/data/' + self.__task_id + '/img/' + mblog['mid'] + '_' + str(i) + '.jpg'
+                        file_name = self.__task_id + '_' + mblog['mid'] + '_' + str(i) + '.jpg'
+                        self.mongo.save_image(pic_url, file_name)
+                        mblog['pics'][i] = file_name
+                        # if not os.path.exists('/data/' + self.__task_id + '/img/'):
+                        #     os.makedirs('/data/' + self.__task_id + '/img/')
+                        # urlretrieve(pic_url, '/data/' + self.__task_id + '/img/' + mblog['mid'] + '_' + str(i) + '.jpg')
+                        # mblog['pics'][i] = '/data/' + self.__task_id + '/img/' + mblog['mid'] + '_' + str(i) + '.jpg'
                 else:
                     mblog['pics'] = None
 
                 if self.crawl_video:
                     #  下载视频
                     if 'page_info' in mblog and mblog['page_info']['type'] == 'video':
-                        vidoe_url = mblog['page_info']['media_info']['stream_url_hd']
-                        res = requests.get(vidoe_url, stream=True)
-                        if not os.path.exists('/data/' + self.__task_id + '/video/'):
-                            os.makedirs('/data/' + self.__task_id + '/video/')
-                        # with open('./video/' + self.__task_id + '_' + mblog['mid'] + '.mp4', "wb") as mp4:
-                        with open('/data/' + self.__task_id + '/video/' + mblog['mid']+'.mp4', "wb") as mp4:
-                            for chunk in res.iter_content(
-                                    chunk_size=1024 * 1024):
-                                if chunk:
-                                    mp4.write(chunk)
-                        mblog['video'] = '/data/' + self.__task_id + '/video/' + mblog['mid']+'.mp4'
+                        video_url = mblog['page_info']['media_info']['stream_url_hd']
+                        file_name = self.__task_id + ' ' + mblog['mid'] + '.mp4'
+                        self.mongo.save_video(video_url, file_name)
+                        mblog['video'] = file_name
+                        # res = requests.get(video_url, stream=True)
+                        # if not os.path.exists('/data/' + self.__task_id + '/video/'):
+                        #     os.makedirs('/data/' + self.__task_id + '/video/')
+                        # with open('/data/' + self.__task_id + '/video/' + mblog['mid']+'.mp4', "wb") as mp4:
+                        #     for chunk in res.iter_content(
+                        #             chunk_size=1024 * 1024):
+                        #         if chunk:
+                        #             mp4.write(chunk)
+                        # mblog['video'] = '/data/' + self.__task_id + '/video/' + mblog['mid']+'.mp4'
                     else:
                         mblog['video'] = None
                 else:
