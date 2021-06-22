@@ -31,7 +31,7 @@ class KeyWordsSpider(RedisSpider):
     handle_httpstatus_list = [418]  # http status code for not ignoring
     redis_key = 'KeyWordsSpider:start_urls'
 
-    def __init__(self, keyword, node='master', uu_id='test', page=50, crawl_image=False, crawl_video=False, important_user=False, *args, **kwargs):
+    def __init__(self, keyword, node='master', uu_id='test', page=50, operation="or", crawl_image=False, crawl_video=False, important_user=False, *args, **kwargs):
         super(KeyWordsSpider, self).__init__(*args, **kwargs)
         self.__task_id = uu_id
         self.api = {
@@ -46,7 +46,9 @@ class KeyWordsSpider(RedisSpider):
                                  'api_1': '&containerid=107603', 'api_2': '&page=',
                                  'longtext_api': 'https://m.weibo.cn/statuses/extend?id=',
                                  'precise_time_api': 'https://m.weibo.cn/status/'}
-        self.keyword = keyword
+        # self.keyword = keyword
+        self.keywords = list(filter(None, keyword.split('|')))
+        self.operation = operation
         self.redis_key = self.redis_key+uu_id
         self.crawl_image = crawl_image
         self.crawl_video = crawl_video
@@ -60,27 +62,29 @@ class KeyWordsSpider(RedisSpider):
             settings = get_project_settings()
             r = redis.Redis(host=settings.get("REDIS_HOST"), port=settings.get("REDIS_PORT"), decode_responses=True)
             time_stamp = floor(time())
-            keyword_part = quote(self.api['api_1'] + keyword, encoding='utf-8')
-            url_template = self.api['api_0'] + keyword_part + self.api['api_2'] + \
-                           self.api['api_3'] + str(time_stamp) + self.api['api_4']
-            u = url_template + str('1')
-            print(u)
-            # page_num = self.parse_page_num(u)
-            for i in range(5):
-                page_num = self.parse_page_num(u)
-                if page_num > 1:
-                    break
-            self.page_num = min(page_num, int(page))
-            print(self.page_num)
-            # self.page_num = 5
-            for i in range(1, self.page_num + 1):
-                url = url_template + str(i)
-                request_data = {
-                    'url': url,
-                    'meta': {'key_words': keyword}
-                }
-                r.lpush(self.redis_key, json.dumps(request_data))
-                # yield scrapy.Request(url=url, callback=self.parse, meta={'key_words': keywords})
+
+            for kw in self.keywords:
+                keyword_part = quote(self.api['api_1'] + kw, encoding='utf-8')
+                url_template = self.api['api_0'] + keyword_part + self.api['api_2'] + \
+                               self.api['api_3'] + str(time_stamp) + self.api['api_4']
+                u = url_template + str('1')
+                print(u)
+                # page_num = self.parse_page_num(u)
+                for i in range(5):
+                    page_num = self.parse_page_num(u)
+                    if page_num > 1:
+                        break
+                self.page_num = min(page_num, int(page))
+                print(self.page_num)
+                # self.page_num = 5
+                for i in range(1, self.page_num + 1):
+                    url = url_template + str(i)
+                    request_data = {
+                        'url': url,
+                        'meta': {'key_words': kw}
+                    }
+                    r.lpush(self.redis_key, json.dumps(request_data))
+                    # yield scrapy.Request(url=url, callback=self.parse, meta={'key_words': keywords})
 
     # Override父类的make_request_from_data方法，解析json生成Request
     def make_request_from_data(self, data):
@@ -154,6 +158,10 @@ class KeyWordsSpider(RedisSpider):
                                              meta={'post_item': mblog})
                     else:
                         item = self.parse_field(mblog)
+                        if self.operation == "and":
+                            for kw in self.keywords:
+                                if kw not in item['text']:
+                                    return
                         yield item
 
     def parse_longtext(self, response):
@@ -165,6 +173,10 @@ class KeyWordsSpider(RedisSpider):
             item = self.parse_field(user_post_item)
         except:
             return
+        if self.operation == "and":
+            for kw in self.keywords:
+                if kw not in item['text']:
+                    return
         yield item
 
     def parse_field(self, item):

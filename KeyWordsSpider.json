@@ -4,6 +4,12 @@
         "necessary":true,
         "description":"目标关键字"
     },
+    "operation":{
+        "type":"select",
+        "necessary":true,
+        "description":"关键字运算",
+        "candidates":["and", "or"]
+    },
     "crawl_image":{
         "type":"select",
         "necessary":true,
