@@ -15,6 +15,7 @@ from fake_useragent import UserAgent
 from scrapy import signals
 from scrapy.exceptions import IgnoreRequest
 from scrapy.downloadermiddlewares.useragent import UserAgentMiddleware
+from .database_tool import DBConnector
 
 
 # to add random user-agent for every request
@@ -61,6 +62,8 @@ class RetryMiddleware(object):
         self.ua = UserAgent()
         self.__err_count = {}  # request error times
         self.ip_num = ip_num
+        db_connector = DBConnector()
+        self.db, client = db_connector.create_mongo_connection()
 
     @classmethod
     def from_crawler(cls, crawler):
@@ -82,16 +85,24 @@ class RetryMiddleware(object):
             # to resend this request and change the ua and proxy ip
             if self.__err_count[url_hash] < self.retry_time:
                 request.headers['User-agent'] = self.ua.random
+                h = request.url.split(':')[0]  # 请求的协议头
+                if h == 'https':
+                    ip = self.get_random_proxy("https")
+                    request.meta['proxy'] = 'https://' + ip
+                else:
+                    ip = self.get_random_proxy("http")
+                    request.meta['proxy'] = 'http://' + ip
                 # add proxy for the new request
                 # proxy = RandomUaAndProxyIpMiddleware.get_proxy_ip(self.ip_num)
                 # request.meta['proxy'] = proxy
                 logging.log(msg=time.strftime("%Y-%m-%d %H:%M:%S [RetryMiddleware] ")
-                            + spider.name + ": restart crawl url:" + response.url, level=logging.INFO)
+                                + spider.name + ": restart crawl url:" + response.url, level=logging.INFO)
                 return request
             else:
                 # raise error IgnoreRequest to drop this request
                 logging.log(msg=time.strftime("%Y-%m-%d %H:%M:%S [RetryMiddleware] ")
-                            + spider.name + ": drop request by maximum retry, url:" + response.url, level=logging.INFO)
+                                + spider.name + ": drop request by maximum retry, url:" + response.url,
+                            level=logging.INFO)
                 raise IgnoreRequest
         else:
             try:
@@ -100,7 +111,8 @@ class RetryMiddleware(object):
                     # crawl empty json string
                     # drop this request
                     logging.log(msg=time.strftime("%Y-%m-%d %H:%M:%S [RetryMiddleware] ")
-                                + spider.name + ": drop request by empty json, url:" + response.url, level=logging.INFO)
+                                    + spider.name + ": drop request by empty json, url:" + response.url,
+                                level=logging.INFO)
                     raise IgnoreRequest
                 else:
                     # request.meta['parse_json'] = parse_json
@@ -112,6 +124,15 @@ class RetryMiddleware(object):
                     return response
                 else:
                     logging.log(msg=time.strftime("%Y-%m-%d %H:%M:%S [RetryMiddleware] ")
-                                + spider.name + ": drop request by json decoding error, url:"
-                                + response.url, level=logging.INFO)
+                                    + spider.name + ": drop request by json decoding error, url:"
+                                    + response.url, level=logging.INFO)
                     raise IgnoreRequest
+
+    def get_random_proxy(self, type):
+        ip_list = self.db['ipList'].find()
+        ip_list = list(ip_list[0].keys())[1:]
+        ip = random.sample(ip_list, 1)
+        if type == "https":
+            return '120.83.49.90:9000'
+        # return ip
+        return '153.180.102.104:80'
