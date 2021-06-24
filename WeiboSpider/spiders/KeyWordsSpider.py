@@ -18,6 +18,7 @@ from urllib.parse import quote
 from ..items import UserPostItem
 from scrapy_redis.spiders import RedisSpider
 from scrapy.utils.project import get_project_settings
+from distutils.util import strtobool
 from urllib.request import urlretrieve
 from ..mongo_util import mongo_util
 import ssl
@@ -31,7 +32,7 @@ class KeyWordsSpider(RedisSpider):
     handle_httpstatus_list = [418]  # http status code for not ignoring
     redis_key = 'KeyWordsSpider:start_urls'
 
-    def __init__(self, keyword, node='master', uu_id='test', page=50, operation="or", crawl_image=False, crawl_video=False, important_user=False, *args, **kwargs):
+    def __init__(self, keyword, node='master', uu_id='test', page=50, operation="or", crawl_image='False', crawl_video='False', important_user='False', *args, **kwargs):
         super(KeyWordsSpider, self).__init__(*args, **kwargs)
         self.__task_id = uu_id
         self.api = {
@@ -50,12 +51,12 @@ class KeyWordsSpider(RedisSpider):
         self.keywords = list(filter(None, keyword.split('|')))
         self.operation = operation
         self.redis_key = self.redis_key+uu_id
-        self.crawl_image = crawl_image
-        self.crawl_video = crawl_video
-        self.important_user = important_user
-        if important_user:
+        self.crawl_image = strtobool(crawl_image)
+        self.crawl_video = strtobool(crawl_video)
+        self.important_user = strtobool(important_user)
+        if self.important_user:
             self.uid_list = self.get_important_user()
-        if (crawl_image or crawl_video):
+        if (self.crawl_image or self.crawl_video):
             self.mongo = mongo_util()
 
         if node == 'master':
@@ -135,7 +136,7 @@ class KeyWordsSpider(RedisSpider):
                     #  下载视频
                     if 'page_info' in mblog and mblog['page_info']['type'] == 'video':
                         video_url = mblog['page_info']['media_info']['stream_url_hd']
-                        file_name = self.__task_id + ' ' + mblog['mid'] + '.mp4'
+                        file_name = self.__task_id + '_' + mblog['mid'] + '.mp4'
                         self.mongo.save_video(video_url, file_name)
                         mblog['video'] = file_name
                         # res = requests.get(video_url, stream=True)

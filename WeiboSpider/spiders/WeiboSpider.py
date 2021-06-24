@@ -12,6 +12,7 @@ from ..mongo_util import mongo_util
 from ..items import *
 from scrapy_redis.spiders import RedisSpider
 from scrapy.utils.project import get_project_settings
+from distutils.util import strtobool
 from urllib.request import urlretrieve
 import ssl
 ssl._create_default_https_context = ssl._create_unverified_context
@@ -24,7 +25,7 @@ class WeiboSpider(RedisSpider):
     handle_httpstatus_list = [418]  # http status code for not ignoring
     redis_key = 'WeiboSpider:start_urls'
 
-    def __init__(self, uid="2653906910|5864631680", node='master', uu_id='1996', page=199, crawl_image=False, crawl_video=False, *args, **kwargs):
+    def __init__(self, uid="2653906910|5864631680", node='master', uu_id='1996', page=199, crawl_image='False', crawl_video='False', *args, **kwargs):
         super(WeiboSpider, self).__init__(*args, **kwargs)
         self.start_urls = ['https://m.weibo.cn/']
         self.__uid_list = list(filter(None, uid.split('|')))
@@ -37,9 +38,9 @@ class WeiboSpider(RedisSpider):
                                  'precise_time_api': 'https://m.weibo.cn/status/'}
         self.__weibo_page_range = int(page)
         self.redis_key = self.redis_key+uu_id
-        self.crawl_image = crawl_image
-        self.crawl_video = crawl_video
-        if(crawl_image or crawl_video):
+        self.crawl_image = strtobool(crawl_image)
+        self.crawl_video = strtobool(crawl_video)
+        if(self.crawl_image or self.crawl_video):
             self.mongo = mongo_util()
 
         if node == 'master':
