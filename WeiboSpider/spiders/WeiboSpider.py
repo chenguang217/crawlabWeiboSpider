@@ -179,7 +179,7 @@ class WeiboSpider(RedisSpider):
                 if self.crawl_video:
                     if 'page_info' in mblog and mblog['page_info']['type'] == 'video':
                         video_url = mblog['page_info']['media_info']['stream_url_hd']
-                        file_name = self.__task_id + ' ' + mblog['mid']+'.mp4'
+                        file_name = self.__task_id + '_' + mblog['mid']+'.mp4'
                         self.mongo.save_video(video_url, file_name)
                         mblog['video'] = file_name
                         # res = requests.get(video_url, stream=True)
