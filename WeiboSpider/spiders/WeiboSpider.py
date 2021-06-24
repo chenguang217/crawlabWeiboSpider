@@ -43,6 +43,9 @@ class WeiboSpider(RedisSpider):
         if(self.crawl_image or self.crawl_video):
             self.mongo = mongo_util()
 
+        if not os.path.exists('/data/'):
+            os.makedirs('/data/')
+
         if node == 'master':
             # 获取redis连接
             # pool = redis.ConnectionPool(host='localhost', port=6379, decode_responses=True)
@@ -168,12 +171,16 @@ class WeiboSpider(RedisSpider):
                         pic = mblog['pics'][i]
                         pic_url = 'https://wx3.sinaimg.cn/large/'+pic['pid']+'.jpg'
                         file_name = self.__task_id+'_'+mblog['mid'] + '_' + str(i) + '.jpg'
-                        self.mongo.save_image(pic_url, file_name)
-                        mblog['pics'][i] = file_name
-                        # if not os.path.exists('/data/' + self.__task_id + '/img/'):
-                        #     os.makedirs('/data/' + self.__task_id + '/img/')
-                        # urlretrieve(pic_url, '/data/' + self.__task_id + '/img/' + mblog['mid'] + '_' + str(i) + '.jpg')
-                        # mblog['pics'][i] = '/data/' + self.__task_id + '/img/' + mblog['mid'] + '_' + str(i) + '.jpg'
+                        # self.mongo.save_image(pic_url, file_name)
+                        # mblog['pics'][i] = file_name
+                        urlretrieve(pic_url, '/data/' + file_name)
+                        try:
+                            self.fileUpload('/data/' + file_name, file_name)
+                        except:
+                            logging.log(msg=time.strftime("%Y-%m-%d %H:%M:%S [WeiboSpider] ")
+                                            + "WeiboSpider" + ": failed to upload image:"
+                                            + file_name, level=logging.INFO)
+                        mblog['pics'][i] = '/data/' + file_name
                 else:
                     mblog['pics'] = None
                 #  下载视频
@@ -181,17 +188,21 @@ class WeiboSpider(RedisSpider):
                     if 'page_info' in mblog and mblog['page_info']['type'] == 'video':
                         video_url = mblog['page_info']['media_info']['stream_url_hd']
                         file_name = self.__task_id + '_' + mblog['mid']+'.mp4'
-                        self.mongo.save_video(video_url, file_name)
-                        mblog['video'] = file_name
-                        # res = requests.get(video_url, stream=True)
-                        # if not os.path.exists('/data/' + self.__task_id + '/video/'):
-                        #     os.makedirs('/data/' + self.__task_id + '/video/')
-                        # with open('/data/' + self.__task_id + '/video/' + mblog['mid']+'.mp4', "wb") as mp4:
-                        #     for chunk in res.iter_content(
-                        #             chunk_size=1024 * 1024):
-                        #         if chunk:
-                        #             mp4.write(chunk)
-                        # mblog['video'] = '/data/' + self.__task_id + '/video/' + mblog['mid']+'.mp4'
+                        # self.mongo.save_video(video_url, file_name)
+                        # mblog['video'] = file_name
+                        res = requests.get(video_url, stream=True)
+                        with open('/data/'+file_name, "wb") as mp4:
+                            for chunk in res.iter_content(
+                                    chunk_size=1024 * 1024):
+                                if chunk:
+                                    mp4.write(chunk)
+                        try:
+                            self.fileUpload('/data/' + file_name, file_name)
+                        except:
+                            logging.log(msg=time.strftime("%Y-%m-%d %H:%M:%S [WeiboSpider] ")
+                                            + "WeiboSpider" + ": failed to upload video:"
+                                            + file_name, level=logging.INFO)
+                        mblog['video'] = '/data/'+file_name
                     else:
                         mblog['video'] = None
                 else:
@@ -261,6 +272,14 @@ class WeiboSpider(RedisSpider):
             user_post_item['pics'] = None
         return user_post_item
 
+    def fileUpload(self, file_path, file_name):
+        upload_url = 'http://192.168.0.230:8888/upload'
+        header = {"ct": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"}
+        files = {'file': open(file_path, 'rb')}
+        # upload_data = {"parentId": "", "fileCategory": "personal", "fileSize": 179, "fileName": file_name, "uoType": 1}
+        upload_data = {"fileName": file_name}
+        upload_res = requests.post(upload_url, upload_data, files=files, headers=header)
+        return upload_res.text
     # def parse_comments(self, response):
     #     content = json.loads(response.text)
     #     max_id = content['data']['max_id']
