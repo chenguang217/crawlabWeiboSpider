@@ -1,8 +1,3 @@
-# -*- coding: utf-8 -*-
-# @Author  : CharesFuns
-# @Time    : 2020/5/8 20:51
-# @Function: To crawl weibo information based on key words
-
 import json
 
 import requests
@@ -93,6 +88,7 @@ class KeyWordsSpider(RedisSpider):
         url = data.get('url')
         meta = data.get('meta')
         print("Fetch url:", url)
+        logging.log(msg="Fetch url:"+url, level=logging.INFO)
         return scrapy.Request(url=url, callback=self.parse, meta=meta, dont_filter=True)
 
     def parse_page_num(self, url):

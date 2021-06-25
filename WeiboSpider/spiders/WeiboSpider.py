@@ -104,6 +104,7 @@ class WeiboSpider(RedisSpider):
         callback = data.get('callback')
         meta = data.get('meta')
         print("Fetch url:", url)
+        logging.log(msg="Fetch url:" + url, level=logging.INFO)
         if callback == "parse_user":
             return scrapy.Request(url=url, callback=self.parse_user, meta=meta, dont_filter=True)
         elif callback == "parse_post":

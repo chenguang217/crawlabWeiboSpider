@@ -1,5 +1,6 @@
 import json
 import requests
+import logging
 import scrapy
 import redis
 from scrapy.utils.project import get_project_settings
@@ -67,6 +68,7 @@ class FansListSpider(RedisSpider):
         callback = data.get('callback')
         meta = data.get('meta')
         print("Fetch url:", url)
+        logging.log(msg="Fetch url:" + url, level=logging.INFO)
         if callback == "parse_fans":
             return scrapy.Request(url=url, callback=self.parse_fans, meta=meta, dont_filter=True)
         elif callback == "parse_follows":
