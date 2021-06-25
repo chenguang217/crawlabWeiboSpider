@@ -8,22 +8,26 @@
         "type":"select",
         "necessary":true,
         "description":"是否爬取图片",
-        "candidates":["True", "False"]
+        "candidates":["True", "False"],
+        "display":true
     },
     "crawl_video":{
         "type":"select",
         "necessary":true,
         "description":"是否爬取视频",
-        "candidates":["True", "False"]
+        "candidates":["True", "False"],
+        "display":false
     },
     "url":{
         "type":"string",
         "necessary":true,
-        "description":"www.weibo.com"
+        "description":"www.weibo.com",
+        "display":false
     },
     "website_type":{
         "type":"string",
         "necessary":true,
-        "description":"社交媒体"
+        "description":"社交媒体",
+        "display":true
     }
 }

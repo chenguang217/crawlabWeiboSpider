@@ -2,40 +2,47 @@
     "keyword":{
         "type":"string",
         "necessary":true,
-        "description":"目标关键字"
+        "description":"目标关键字",
+        "display":true
     },
     "operation":{
         "type":"select",
         "necessary":true,
         "description":"关键字运算",
-        "candidates":["and", "or"]
+        "candidates":["and", "or"],
+        "display":false
     },
     "crawl_image":{
         "type":"select",
         "necessary":true,
         "description":"是否爬取图片",
-        "candidates":["True", "False"]
+        "candidates":["True", "False"],
+        "display":false
     },
     "crawl_video":{
         "type":"select",
         "necessary":true,
         "description":"是否爬取视频",
-        "candidates":["True", "False"]
+        "candidates":["True", "False"],
+        "display":false
     },
     "important_user":{
         "type":"select",
         "necessary":true,
         "description":"是否按重点用户爬取",
-        "candidates":["True", "False"]
+        "candidates":["True", "False"],
+        "display":false
     },
     "url":{
         "type":"string",
         "necessary":true,
-        "description":"www.weibo.com"
+        "description":"www.weibo.com",
+        "display":false
     },
     "website_type":{
         "type":"string",
         "necessary":true,
-        "description":"社交媒体"
+        "description":"社交媒体",
+        "display":true
     }
 }
