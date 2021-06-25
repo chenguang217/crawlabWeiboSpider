@@ -56,8 +56,8 @@ class KeyWordsSpider(RedisSpider):
         self.important_user = strtobool(important_user)
         if self.important_user:
             self.uid_list = self.get_important_user()
-        if (self.crawl_image or self.crawl_video):
-            self.mongo = mongo_util()
+        # if (self.crawl_image or self.crawl_video):
+        #     self.mongo = mongo_util()
 
         if node == 'master':
             settings = get_project_settings()
@@ -143,13 +143,13 @@ class KeyWordsSpider(RedisSpider):
                         file_name = self.__task_id + '_' + mblog['mid'] + '.mp4'
                         # self.mongo.save_video(video_url, file_name)
                         # mblog['video'] = file_name
-                        res = requests.get(video_url, stream=True)
-                        with open('/data/' + file_name, "wb") as mp4:
-                            for chunk in res.iter_content(
-                                    chunk_size=1024 * 1024):
-                                if chunk:
-                                    mp4.write(chunk)
                         try:
+                            res = requests.get(video_url, stream=True)
+                            with open('/data/' + file_name, "wb") as mp4:
+                                for chunk in res.iter_content(
+                                        chunk_size=1024 * 1024):
+                                    if chunk:
+                                        mp4.write(chunk)
                             self.fileUpload('/data/' + file_name, file_name)
                         except:
                             logging.log(msg=time.strftime("%Y-%m-%d %H:%M:%S [KeyWordsSpider] ")

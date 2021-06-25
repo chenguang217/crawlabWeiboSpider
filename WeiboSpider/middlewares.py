@@ -85,13 +85,13 @@ class RetryMiddleware(object):
             # to resend this request and change the ua and proxy ip
             if self.__err_count[url_hash] < self.retry_time:
                 request.headers['User-agent'] = self.ua.random
-                h = request.url.split(':')[0]  # 请求的协议头
-                if h == 'https':
-                    ip = self.get_random_proxy("https")
-                    request.meta['proxy'] = 'https://' + ip
-                else:
-                    ip = self.get_random_proxy("http")
-                    request.meta['proxy'] = 'http://' + ip
+                # h = request.url.split(':')[0]  # 请求的协议头
+                # if h == 'https':
+                #     ip = self.get_random_proxy("https")
+                #     request.meta['proxy'] = 'https://' + ip
+                # else:
+                #     ip = self.get_random_proxy("http")
+                #     request.meta['proxy'] = 'http://' + ip
                 # add proxy for the new request
                 # proxy = RandomUaAndProxyIpMiddleware.get_proxy_ip(self.ip_num)
                 # request.meta['proxy'] = proxy
