@@ -161,17 +161,17 @@ class KeyWordsSpider(RedisSpider):
                 else:
                     mblog['video'] = None
 
-                    if mblog['isLongText']:
-                        longtext_url = self.__weibo_info_api['longtext_api'] + mblog['id']
-                        yield scrapy.Request(url=longtext_url, callback=self.parse_longtext,
-                                             meta={'post_item': mblog})
-                    else:
-                        item = self.parse_field(mblog)
-                        if self.operation == "and":
-                            for kw in self.keywords:
-                                if kw not in item['text']:
-                                    return
-                        yield item
+                if mblog['isLongText']:
+                    longtext_url = self.__weibo_info_api['longtext_api'] + mblog['id']
+                    yield scrapy.Request(url=longtext_url, callback=self.parse_longtext,
+                                         meta={'post_item': mblog})
+                else:
+                    item = self.parse_field(mblog)
+                    if self.operation == "and":
+                        for kw in self.keywords:
+                            if kw not in item['text']:
+                                return
+                    yield item
 
     def parse_longtext(self, response):
         # parser for longtext post
