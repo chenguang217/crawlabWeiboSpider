@@ -5,13 +5,6 @@
         "description":"目标关键字",
         "display":true
     },
-    "operation":{
-        "type":"select",
-        "necessary":true,
-        "description":"关键字运算",
-        "candidates":["and", "or"],
-        "display":false
-    },
     "crawl_image":{
         "type":"select",
         "necessary":true,
@@ -23,13 +16,6 @@
         "type":"select",
         "necessary":true,
         "description":"是否爬取视频",
-        "candidates":["True", "False"],
-        "display":false
-    },
-    "important_user":{
-        "type":"select",
-        "necessary":true,
-        "description":"是否按重点用户爬取",
         "candidates":["True", "False"],
         "display":false
     },
