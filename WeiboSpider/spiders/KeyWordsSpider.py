@@ -54,6 +54,9 @@ class KeyWordsSpider(RedisSpider):
         # if (self.crawl_image or self.crawl_video):
         #     self.mongo = mongo_util()
 
+        if not os.path.exists('/data/'):
+            os.makedirs('/data/')
+
         if node == 'master':
             settings = get_project_settings()
             r = redis.Redis(host=settings.get("REDIS_HOST"), port=settings.get("REDIS_PORT"), decode_responses=True)
@@ -146,12 +149,16 @@ class KeyWordsSpider(RedisSpider):
                                         chunk_size=1024 * 1024):
                                     if chunk:
                                         mp4.write(chunk)
-                            self.fileUpload('/data/' + file_name, file_name)
+                            if os.path.getsize('/data/' + file_name) > 500 * 1024:
+                                self.fileUpload('/data/' + file_name, file_name)
+                                mblog['video'] = '/data/' + file_name
+                            else:
+                                mblog['video'] = None
                         except:
                             logging.log(msg=time.strftime("%Y-%m-%d %H:%M:%S [KeyWordsSpider] ")
                                             + "KeyWordsSpider" + ": failed to upload video:"
                                             + file_name, level=logging.INFO)
-                        mblog['video'] = '/data/' + file_name
+                            mblog['video'] = None
                     else:
                         mblog['video'] = None
                 else:
