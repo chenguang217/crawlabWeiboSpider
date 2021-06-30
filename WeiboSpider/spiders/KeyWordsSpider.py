@@ -27,7 +27,7 @@ class KeyWordsSpider(RedisSpider):
     handle_httpstatus_list = [418]  # http status code for not ignoring
     redis_key = 'KeyWordsSpider:start_urls'
 
-    def __init__(self, keyword, node='master', uu_id='test', page=50, operation="or", crawl_image='False', crawl_video='False', important_user='False', *args, **kwargs):
+    def __init__(self, keyword, node='master', uu_id='test', page=200, operation="or", crawl_image='False', crawl_video='False', important_user='False', *args, **kwargs):
         super(KeyWordsSpider, self).__init__(*args, **kwargs)
         self.__task_id = uu_id
         self.api = {
@@ -67,7 +67,7 @@ class KeyWordsSpider(RedisSpider):
                 url_template = self.api['api_0'] + keyword_part + self.api['api_2'] + \
                                self.api['api_3'] + str(time_stamp) + self.api['api_4']
                 u = url_template + str('1')
-                print(u)
+                # print(u)
                 # page_num = self.parse_page_num(u)
                 for i in range(5):
                     page_num = self.parse_page_num(u)
@@ -105,7 +105,7 @@ class KeyWordsSpider(RedisSpider):
             return 3
         content_dict = json.loads(content)
         post_count = content_dict['data']['cardlistInfo']['total']
-        page_num = min(1000, post_count)//20 + 1
+        page_num = post_count//10 + 1
         return page_num
 
     def parse(self, response):
