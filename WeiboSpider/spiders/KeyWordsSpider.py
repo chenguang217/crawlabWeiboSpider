@@ -59,6 +59,9 @@ class KeyWordsSpider(RedisSpider):
         # if (self.crawl_image or self.crawl_video):
         #     self.mongo = mongo_util()
 
+        if not os.path.exists('/data/'):
+            os.makedirs('/data/')
+
         if node == 'master':
             settings = get_project_settings()
             r = redis.Redis(host=settings.get("REDIS_HOST"), port=settings.get("REDIS_PORT"), decode_responses=True)
