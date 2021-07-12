@@ -16,7 +16,7 @@ SPIDER_MODULES = ['WeiboSpider.spiders']
 NEWSPIDER_MODULE = 'WeiboSpider.spiders'
 
 # LOG_FILE = "Weibo_Spider.log"
-LOG_LEVEL = "INFO"
+LOG_LEVEL = "DEBUG"
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 # USER_AGENT = 'WeiboSpider (+http://www.yourdomain.com)'
@@ -30,7 +30,7 @@ CONCURRENT_REQUESTS = 8
 # Configure a delay for requests for the same website (default: 0)
 # See https://doc.scrapy.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-DOWNLOAD_DELAY = 0.4
+DOWNLOAD_DELAY = 0.5
 # The download delay setting will honor only one of:
 # CONCURRENT_REQUESTS_PER_DOMAIN = 16
 # CONCURRENT_REQUESTS_PER_IP = 16
@@ -74,7 +74,15 @@ DUPEFILTER_DEBUG = True
 
 SCHEDULER_PERSIST = True
 
-MONGO_HOST = '127.0.0.1'
+# MONGO_HOST = '127.0.0.1'
+# MONGO_PORT = 27017
+# DB_NAME = 'weibo'
+
+# MONGO_HOST = '139.9.205.93'
+# MONGO_PORT = 27019
+# DB_NAME = 'crawlab_test'
+
+MONGO_HOST = '120.55.96.77'
 MONGO_PORT = 27017
 DB_NAME = 'weibo'
 
@@ -83,6 +91,7 @@ REDIS_HOST = '127.0.0.1'
 #             'password': '123456',
 #         }
 REDIS_PORT = 6379
+SCHEDULER_DUPEFILTER_KEY = '1996:requests'
 
 # Enable or disable extensions
 # See https://doc.scrapy.org/en/latest/topics/extensions.html
