@@ -1,8 +1,3 @@
-# -*- coding: utf-8 -*-
-# @Author  : CharesFuns
-# @Time    : 2020/5/8 20:51
-# @Function: To crawl weibo information based on key words
-
 import json
 
 import requests
@@ -32,7 +27,7 @@ class KeyWordsSpider(RedisSpider):
     handle_httpstatus_list = [418]  # http status code for not ignoring
     redis_key = 'KeyWordsSpider:start_urls'
 
-    def __init__(self, keyword, node='master', uu_id='test', page=50, operation="or", crawl_image='False', crawl_video='False', important_user='False', *args, **kwargs):
+    def __init__(self, keyword, node='master', uu_id='test', page=200, operation="or", crawl_image='False', crawl_video='False', important_user='False', *args, **kwargs):
         super(KeyWordsSpider, self).__init__(*args, **kwargs)
         self.__task_id = uu_id
         self.api = {
@@ -72,7 +67,7 @@ class KeyWordsSpider(RedisSpider):
                 url_template = self.api['api_0'] + keyword_part + self.api['api_2'] + \
                                self.api['api_3'] + str(time_stamp) + self.api['api_4']
                 u = url_template + str('1')
-                print(u)
+                # print(u)
                 # page_num = self.parse_page_num(u)
                 for i in range(5):
                     page_num = self.parse_page_num(u)
@@ -96,6 +91,7 @@ class KeyWordsSpider(RedisSpider):
         url = data.get('url')
         meta = data.get('meta')
         print("Fetch url:", url)
+        logging.log(msg="Fetch url:"+url, level=logging.INFO)
         return scrapy.Request(url=url, callback=self.parse, meta=meta, dont_filter=True)
 
     def parse_page_num(self, url):
@@ -109,7 +105,7 @@ class KeyWordsSpider(RedisSpider):
             return 3
         content_dict = json.loads(content)
         post_count = content_dict['data']['cardlistInfo']['total']
-        page_num = min(1000, post_count)//20 + 1
+        page_num = post_count//10 + 1
         return page_num
 
     def parse(self, response):
@@ -153,28 +149,32 @@ class KeyWordsSpider(RedisSpider):
                                         chunk_size=1024 * 1024):
                                     if chunk:
                                         mp4.write(chunk)
-                            self.fileUpload('/data/' + file_name, file_name)
+                            if os.path.getsize('/data/' + file_name) > 500 * 1024:
+                                self.fileUpload('/data/' + file_name, file_name)
+                                mblog['video'] = '/data/' + file_name
+                            else:
+                                mblog['video'] = None
                         except:
                             logging.log(msg=time.strftime("%Y-%m-%d %H:%M:%S [KeyWordsSpider] ")
                                             + "KeyWordsSpider" + ": failed to upload video:"
                                             + file_name, level=logging.INFO)
-                        mblog['video'] = '/data/' + file_name
+                            mblog['video'] = None
                     else:
                         mblog['video'] = None
                 else:
                     mblog['video'] = None
 
-                    if mblog['isLongText']:
-                        longtext_url = self.__weibo_info_api['longtext_api'] + mblog['id']
-                        yield scrapy.Request(url=longtext_url, callback=self.parse_longtext,
-                                             meta={'post_item': mblog})
-                    else:
-                        item = self.parse_field(mblog)
-                        if self.operation == "and":
-                            for kw in self.keywords:
-                                if kw not in item['text']:
-                                    return
-                        yield item
+                if mblog['isLongText']:
+                    longtext_url = self.__weibo_info_api['longtext_api'] + mblog['id']
+                    yield scrapy.Request(url=longtext_url, callback=self.parse_longtext,
+                                         meta={'post_item': mblog})
+                else:
+                    item = self.parse_field(mblog)
+                    if self.operation == "and":
+                        for kw in self.keywords:
+                            if kw not in item['text']:
+                                return
+                    yield item
 
     def parse_longtext(self, response):
         # parser for longtext post

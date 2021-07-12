@@ -2,22 +2,19 @@
     "uid":{
         "type":"string",
         "necessary":true,
-        "description":"目标用户uid"
-    },
-    "node":{
-        "type":"select",
-        "necessary":true,
-        "description":"爬虫类型",
-        "candidates":["master", "slave"]
+        "description":"目标用户uid",
+        "display":true
     },
     "url":{
         "type":"string",
         "necessary":true,
-        "description":"www.weibo.com"
+        "description":"www.weibo.com",
+        "display":false
     },
     "website_type":{
         "type":"string",
         "necessary":true,
-        "description":"社交媒体"
+        "description":"社交媒体",
+        "display":true
     }
 }

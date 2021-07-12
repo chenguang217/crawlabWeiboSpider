@@ -27,6 +27,7 @@ class RandomUaAndProxyIpMiddleware(UserAgentMiddleware):
         self.api = api
         self.ip_num = ip_num
 
+
     @classmethod
     def from_crawler(cls, crawler):
         api = crawler.settings.get('PROXY_API')  # api to get proxy ip address, usually an url
@@ -64,6 +65,12 @@ class RetryMiddleware(object):
         self.ip_num = ip_num
         db_connector = DBConnector()
         self.db, client = db_connector.create_mongo_connection()
+        self.PROXY_http = ['218.16.62.152:3128',
+                           '118.185.38.153:35101',
+                           '101.205.120.102:80',
+                           '106.14.250.36:8080',
+                           '106.14.22.184:8080',
+                           '106.14.249.156:8080']
 
     @classmethod
     def from_crawler(cls, crawler):
@@ -85,13 +92,13 @@ class RetryMiddleware(object):
             # to resend this request and change the ua and proxy ip
             if self.__err_count[url_hash] < self.retry_time:
                 request.headers['User-agent'] = self.ua.random
-                # h = request.url.split(':')[0]  # 请求的协议头
-                # if h == 'https':
-                #     ip = self.get_random_proxy("https")
-                #     request.meta['proxy'] = 'https://' + ip
-                # else:
-                #     ip = self.get_random_proxy("http")
-                #     request.meta['proxy'] = 'http://' + ip
+                h = request.url.split(':')[0]  # 请求的协议头
+                if h == 'https':
+                    ip = self.get_random_proxy("https")
+                    request.meta['proxy'] = 'https://' + ip
+                else:
+                    ip = self.get_random_proxy("http")
+                    request.meta['proxy'] = 'http://' + ip
                 # add proxy for the new request
                 # proxy = RandomUaAndProxyIpMiddleware.get_proxy_ip(self.ip_num)
                 # request.meta['proxy'] = proxy
@@ -129,10 +136,12 @@ class RetryMiddleware(object):
                     raise IgnoreRequest
 
     def get_random_proxy(self, type):
-        ip_list = self.db['ipList'].find()
-        ip_list = list(ip_list[0].keys())[1:]
-        ip = random.sample(ip_list, 1)
+        # ip_list = self.db['ipList'].find()
+        # ip_list = list(ip_list[0].keys())[1:]
+        ip_list = self.PROXY_http
+        ip = random.choice(ip_list)
         if type == "https":
-            return '120.83.49.90:9000'
-        # return ip
-        return '153.180.102.104:80'
+            return ip
+        return ip
+
+

@@ -40,8 +40,8 @@ class WeiboSpider(RedisSpider):
         self.redis_key = self.redis_key+uu_id
         self.crawl_image = strtobool(crawl_image)
         self.crawl_video = strtobool(crawl_video)
-        if(self.crawl_image or self.crawl_video):
-            self.mongo = mongo_util()
+        # if(self.crawl_image or self.crawl_video):
+        #     self.mongo = mongo_util()
 
         if not os.path.exists('/data/'):
             os.makedirs('/data/')
@@ -104,6 +104,7 @@ class WeiboSpider(RedisSpider):
         callback = data.get('callback')
         meta = data.get('meta')
         print("Fetch url:", url)
+        logging.log(msg="Fetch url:" + url, level=logging.INFO)
         if callback == "parse_user":
             return scrapy.Request(url=url, callback=self.parse_user, meta=meta, dont_filter=True)
         elif callback == "parse_post":
@@ -190,19 +191,24 @@ class WeiboSpider(RedisSpider):
                         file_name = self.__task_id + '_' + mblog['mid']+'.mp4'
                         # self.mongo.save_video(video_url, file_name)
                         # mblog['video'] = file_name
-                        res = requests.get(video_url, stream=True)
-                        with open('/data/'+file_name, "wb") as mp4:
-                            for chunk in res.iter_content(
-                                    chunk_size=1024 * 1024):
-                                if chunk:
-                                    mp4.write(chunk)
                         try:
-                            self.fileUpload('/data/' + file_name, file_name)
+                            res = requests.get(video_url, stream=True)
+                            with open('/data/'+file_name, "wb") as mp4:
+                                for chunk in res.iter_content(
+                                        chunk_size=1024 * 1024):
+                                    if chunk:
+                                        mp4.write(chunk)
+                            if os.path.getsize('/data/' + file_name) > 500 * 1024:
+                                self.fileUpload('/data/' + file_name, file_name)
+                                mblog['video'] = '/data/' + file_name
+                            else:
+                                mblog['video'] = None
                         except:
                             logging.log(msg=time.strftime("%Y-%m-%d %H:%M:%S [WeiboSpider] ")
                                             + "WeiboSpider" + ": failed to upload video:"
                                             + file_name, level=logging.INFO)
-                        mblog['video'] = '/data/'+file_name
+                            mblog['video'] = None
+
                     else:
                         mblog['video'] = None
                 else:
