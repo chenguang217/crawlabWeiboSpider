@@ -12,6 +12,13 @@
         "candidates":["True", "False"],
         "display":false
     },
+    "operation":{
+        "type":"select",
+        "necessary":true,
+        "description":"关键词运算",
+        "candidates":["and", "or"],
+        "display":false
+    },
     "crawl_video":{
         "type":"select",
         "necessary":true,
