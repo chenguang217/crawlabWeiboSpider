@@ -25,7 +25,7 @@ class WeiboSpider(RedisSpider):
     handle_httpstatus_list = [418]  # http status code for not ignoring
     redis_key = 'WeiboSpider:start_urls'
 
-    def __init__(self, uid="2653906910|5864631680", node='master', uu_id='1996', page=199, crawl_image='False', crawl_video='False', *args, **kwargs):
+    def __init__(self, uid="2653906910|5864631680", node='master', uu_id='1996', page=199, crawl_image='False', crawl_video='False', schedule='False', *args, **kwargs):
         super(WeiboSpider, self).__init__(*args, **kwargs)
         self.start_urls = ['https://m.weibo.cn/']
         self.__uid_list = list(filter(None, uid.split('|')))
@@ -40,6 +40,7 @@ class WeiboSpider(RedisSpider):
         self.redis_key = self.redis_key+uu_id
         self.crawl_image = strtobool(crawl_image)
         self.crawl_video = strtobool(crawl_video)
+        self.schedule = strtobool(schedule)
         # if(self.crawl_image or self.crawl_video):
         #     self.mongo = mongo_util()
 

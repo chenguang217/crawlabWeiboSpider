@@ -27,7 +27,7 @@ class KeyWordsSpider(RedisSpider):
     handle_httpstatus_list = [418]  # http status code for not ignoring
     redis_key = 'KeyWordsSpider:start_urls'
 
-    def __init__(self, keyword, node='master', uu_id='test', page=200, operation="or", crawl_image='False', crawl_video='False', important_user='False', *args, **kwargs):
+    def __init__(self, keyword, node='master', uu_id='test', page=200, operation="or", crawl_image='False', crawl_video='False', important_user='False', schedule='False', *args, **kwargs):
         super(KeyWordsSpider, self).__init__(*args, **kwargs)
         self.__task_id = uu_id
         self.api = {
@@ -49,6 +49,8 @@ class KeyWordsSpider(RedisSpider):
         self.crawl_image = strtobool(crawl_image)
         self.crawl_video = strtobool(crawl_video)
         self.important_user = strtobool(important_user)
+        self.node = node
+        self.schedule = strtobool(schedule)
         if self.important_user:
             self.uid_list = self.get_important_user()
         # if (self.crawl_image or self.crawl_video):

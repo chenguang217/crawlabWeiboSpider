@@ -18,6 +18,13 @@
         "candidates":["True", "False"],
         "display":false
     },
+    "schedule":{
+        "type":"select",
+        "necessary":true,
+        "description":"是否定时任务",
+        "candidates":["True", "False"],
+        "display":false
+    },
     "url":{
         "type":"string",
         "necessary":true,

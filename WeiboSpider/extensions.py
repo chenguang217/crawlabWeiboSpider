@@ -3,6 +3,8 @@
 import logging
 import time
 import redis
+import pickle
+import os
 from scrapy import signals
 from scrapy.exceptions import NotConfigured
 from scrapy.utils.project import get_project_settings
@@ -60,11 +62,28 @@ class RedisSpiderSmartIdleClosedExensions(object):
                         '\n meet the idle shutdown conditions, will close the reptile operation'
                         '\n idle start time: {},  close spider time: {}'.format(self.idle_number,
                                                                               self.idle_list[0], self.idle_list[0]))
-            settings = get_project_settings()
-            r = redis.Redis(host=settings.get("REDIS_HOST"), port=settings.get("REDIS_PORT"), decode_responses=True)
-            try:
-                r.delete(spider.name + ':dupefilter')
-            except:
-                pass
+            if not spider.schedule:
+                settings = get_project_settings()
+                r = redis.Redis(host=settings.get("REDIS_HOST"), port=settings.get("REDIS_PORT"), decode_responses=True)
+                try:
+                    dup_key = settings.get("SCHEDULER_DUPEFILTER_KEY")
+                    r.delete(dup_key)
+                except:
+                    pass
+            # print(spider.node)
+            # if spider.node == 'master':
+            #     print(spider.node)
+            #     settings = get_project_settings()
+            #     r = redis.Redis(host=settings.get("REDIS_HOST"), port=settings.get("REDIS_PORT"), decode_responses=True)
+            #     try:
+            #         dup_key = settings.get("SCHEDULER_DUPEFILTER_KEY")
+            #         bak_name = '/data/' + dup_key[:dup_key.index(":")] + '.bak'
+            #         if not os.path.exists(bak_name):
+            #             requests_set = r.smembers(dup_key)
+            #             with open(bak_name, 'wb') as f:
+            #                 pickle.dump(requests_set, f)
+            #             r.delete(dup_key)
+            #     except:
+            #         pass
             # 执行关闭爬虫操作
             self.crawler.engine.close_spider(spider, 'closespider_pagecount')
