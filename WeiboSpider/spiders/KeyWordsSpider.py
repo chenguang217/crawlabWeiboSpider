@@ -15,7 +15,6 @@ from scrapy_redis.spiders import RedisSpider
 from scrapy.utils.project import get_project_settings
 from distutils.util import strtobool
 from urllib.request import urlretrieve
-from ..mongo_util import mongo_util
 import ssl
 ssl._create_default_https_context = ssl._create_unverified_context
 
@@ -53,8 +52,6 @@ class KeyWordsSpider(RedisSpider):
         self.schedule = strtobool(schedule)
         if self.important_user:
             self.uid_list = self.get_important_user()
-        # if (self.crawl_image or self.crawl_video):
-        #     self.mongo = mongo_util()
 
         if not os.path.exists('/data/'):
             os.makedirs('/data/')
@@ -85,7 +82,6 @@ class KeyWordsSpider(RedisSpider):
                         'meta': {'key_words': kw}
                     }
                     r.lpush(self.redis_key, json.dumps(request_data))
-                    # yield scrapy.Request(url=url, callback=self.parse, meta={'key_words': keywords})
 
     # Override父类的make_request_from_data方法，解析json生成Request
     def make_request_from_data(self, data):
@@ -116,67 +112,76 @@ class KeyWordsSpider(RedisSpider):
         for card in cards:
             if card['card_type'] == 9:
                 mblog = card['mblog']
+
                 if self.important_user and mblog['user']['id'] not in self.uid_list:
                     return
-                # 爬取图片
-                if self.crawl_image:
-                    for i in range(min(9, mblog['pic_num'])):
-                        pic = mblog['pics'][i]
-                        pic_url = 'https://wx3.sinaimg.cn/large/'+pic['pid']+'.jpg'
-                        file_name = self.__task_id + '_' + mblog['mid'] + '_' + str(i) + '.jpg'
-                        # self.mongo.save_image(pic_url, file_name)
-                        # mblog['pics'][i] = file_name
-                        urlretrieve(pic_url, '/data/' + file_name)
-                        try:
-                            self.fileUpload('/data/' + file_name, file_name)
-                        except:
-                            logging.log(msg=time.strftime("%Y-%m-%d %H:%M:%S [KeyWordsSpider] ")
-                                            + "KeyWordsSpider" + ": failed to upload image:"
-                                            + file_name, level=logging.INFO)
-                        mblog['pics'][i] = '/data/' + file_name
-                else:
-                    mblog['pics'] = None
 
-                if self.crawl_video:
-                    #  下载视频
-                    if 'page_info' in mblog and mblog['page_info']['type'] == 'video':
-                        video_url = mblog['page_info']['media_info']['stream_url_hd']
-                        file_name = self.__task_id + '_' + mblog['mid'] + '.mp4'
-                        # self.mongo.save_video(video_url, file_name)
-                        # mblog['video'] = file_name
-                        try:
-                            res = requests.get(video_url, stream=True)
-                            with open('/data/' + file_name, "wb") as mp4:
-                                for chunk in res.iter_content(
-                                        chunk_size=1024 * 1024):
-                                    if chunk:
-                                        mp4.write(chunk)
-                            if os.path.getsize('/data/' + file_name) > 500 * 1024:
-                                self.fileUpload('/data/' + file_name, file_name)
-                                mblog['video'] = '/data/' + file_name
-                            else:
-                                mblog['video'] = None
-                        except:
-                            logging.log(msg=time.strftime("%Y-%m-%d %H:%M:%S [KeyWordsSpider] ")
-                                            + "KeyWordsSpider" + ": failed to upload video:"
-                                            + file_name, level=logging.INFO)
-                            mblog['video'] = None
+                detail_url = "https://m.weibo.cn/detail/" + mblog['mid']
+                yield scrapy.Request(url=detail_url, callback=self.parse_text,
+                                     meta={'post_item': mblog})
+
+    def parse_text(self, response):
+        user_post_item = response.meta['post_item']
+
+        # 爬取图片
+        if self.crawl_image:
+            for i in range(min(9, user_post_item['pic_num'])):
+                pic = user_post_item['pics'][i]
+                pic_url = 'https://wx3.sinaimg.cn/large/' + pic['pid'] + '.jpg'
+                file_name = self.__task_id + '_' + user_post_item['mid'] + '_' + str(i) + '.jpg'
+                # self.mongo.save_image(pic_url, file_name)
+                # mblog['pics'][i] = file_name
+                urlretrieve(pic_url, '/data/' + file_name)
+                try:
+                    self.fileUpload('/data/' + file_name, file_name)
+                except:
+                    logging.log(msg=time.strftime("%Y-%m-%d %H:%M:%S [KeyWordsSpider] ")
+                                    + "KeyWordsSpider" + ": failed to upload image:"
+                                    + file_name, level=logging.INFO)
+                user_post_item['pics'][i] = '/data/' + file_name
+        else:
+            user_post_item['pics'] = None
+
+        if self.crawl_video:
+            #  下载视频
+            if 'page_info' in user_post_item and user_post_item['page_info']['type'] == 'video':
+                video_url = user_post_item['page_info']['media_info']['stream_url_hd']
+                file_name = self.__task_id + '_' + user_post_item['mid'] + '.mp4'
+                # self.mongo.save_video(video_url, file_name)
+                # mblog['video'] = file_name
+                try:
+                    res = requests.get(video_url, stream=True)
+                    with open('/data/' + file_name, "wb") as mp4:
+                        for chunk in res.iter_content(
+                                chunk_size=1024 * 1024):
+                            if chunk:
+                                mp4.write(chunk)
+                    if os.path.getsize('/data/' + file_name) > 500 * 1024:
+                        self.fileUpload('/data/' + file_name, file_name)
+                        user_post_item['video'] = '/data/' + file_name
                     else:
-                        mblog['video'] = None
-                else:
-                    mblog['video'] = None
+                        user_post_item['video'] = None
+                except:
+                    logging.log(msg=time.strftime("%Y-%m-%d %H:%M:%S [KeyWordsSpider] ")
+                                    + "KeyWordsSpider" + ": failed to upload video:"
+                                    + file_name, level=logging.INFO)
+                    user_post_item['video'] = None
+            else:
+                user_post_item['video'] = None
+        else:
+            user_post_item['video'] = None
 
-                if mblog['isLongText']:
-                    longtext_url = self.__weibo_info_api['longtext_api'] + mblog['id']
-                    yield scrapy.Request(url=longtext_url, callback=self.parse_longtext,
-                                         meta={'post_item': mblog})
-                else:
-                    item = self.parse_field(mblog)
-                    if self.operation == "and":
-                        for kw in self.keywords:
-                            if kw not in item['text']:
-                                return
-                    yield item
+        if user_post_item['isLongText']:
+            longtext_url = self.__weibo_info_api['longtext_api'] + user_post_item['id']
+            yield scrapy.Request(url=longtext_url, callback=self.parse_longtext,
+                                 meta={'post_item': user_post_item})
+        else:
+            item = self.parse_field(user_post_item)
+            if self.operation == "and":
+                for kw in self.keywords:
+                    if kw not in item['text']:
+                        return
+            yield item
 
     def parse_longtext(self, response):
         # parser for longtext post

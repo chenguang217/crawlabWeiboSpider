@@ -91,7 +91,7 @@ REDIS_HOST = '127.0.0.1'
 #             'password': '123456',
 #         }
 REDIS_PORT = 6379
-SCHEDULER_DUPEFILTER_KEY = '1996:requests'
+SCHEDULER_DUPEFILTER_KEY = '00001:dupefilter'
 
 # Enable or disable extensions
 # See https://doc.scrapy.org/en/latest/topics/extensions.html
