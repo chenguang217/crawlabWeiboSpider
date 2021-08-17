@@ -6,6 +6,7 @@ import redis
 from scrapy.utils.project import get_project_settings
 from scrapy_redis.spiders import RedisSpider
 from ..items import *
+from distutils.util import strtobool
 import ssl
 ssl._create_default_https_context = ssl._create_unverified_context
 
@@ -16,7 +17,7 @@ class FansListSpider(RedisSpider):
     handle_httpstatus_list = [418]
     redis_key = 'FansListSpider:start_urls'
 
-    def __init__(self, uid, node='master', uu_id='test', fans_end=50, follows_end=50, *args, **kwargs):
+    def __init__(self, uid, node='master', uu_id='test', fans_end=50, follows_end=50, schedule='False', *args, **kwargs):
         super(FansListSpider, self).__init__(*args, **kwargs)
         # self.uid = uid
         self.__uid_list = list(filter(None, uid.split('|')))
@@ -28,6 +29,7 @@ class FansListSpider(RedisSpider):
 
         self.__user_info_api = {'api_0': 'api/container/getIndex?type=__uid&value=', 'api_1': '&containerid=100505'}
         self.redis_key = self.redis_key + uu_id
+        self.schedule = strtobool(schedule)
 
         if node == 'master':
             settings = get_project_settings()

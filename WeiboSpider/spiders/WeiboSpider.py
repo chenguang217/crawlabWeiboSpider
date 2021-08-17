@@ -3,12 +3,9 @@ import re
 import json
 import time
 
-import scrapy
 import logging
 import redis
 import requests
-from lxml import etree
-from ..mongo_util import mongo_util
 from ..items import *
 from scrapy_redis.spiders import RedisSpider
 from scrapy.utils.project import get_project_settings
@@ -25,7 +22,7 @@ class WeiboSpider(RedisSpider):
     handle_httpstatus_list = [418]  # http status code for not ignoring
     redis_key = 'WeiboSpider:start_urls'
 
-    def __init__(self, uid="2653906910|5864631680", node='master', uu_id='1996', page=199, crawl_image='False', crawl_video='False', *args, **kwargs):
+    def __init__(self, uid="2653906910|5864631680", node='master', uu_id='1996', page=199, crawl_image='False', crawl_video='False', schedule='False', *args, **kwargs):
         super(WeiboSpider, self).__init__(*args, **kwargs)
         self.start_urls = ['https://m.weibo.cn/']
         self.__uid_list = list(filter(None, uid.split('|')))
@@ -40,6 +37,7 @@ class WeiboSpider(RedisSpider):
         self.redis_key = self.redis_key+uu_id
         self.crawl_image = strtobool(crawl_image)
         self.crawl_video = strtobool(crawl_video)
+        self.schedule = strtobool(schedule)
         # if(self.crawl_image or self.crawl_video):
         #     self.mongo = mongo_util()
 
@@ -166,64 +164,69 @@ class WeiboSpider(RedisSpider):
             if card['card_type'] == 9:
                 # only card_type equals 9, we need
                 mblog = card['mblog']
-                # 爬取图片
-                if self.crawl_image:
-                    for i in range(min(9, mblog['pic_num'])):
-                        pic = mblog['pics'][i]
-                        pic_url = 'https://wx3.sinaimg.cn/large/'+pic['pid']+'.jpg'
-                        file_name = self.__task_id+'_'+mblog['mid'] + '_' + str(i) + '.jpg'
-                        # self.mongo.save_image(pic_url, file_name)
-                        # mblog['pics'][i] = file_name
-                        urlretrieve(pic_url, '/data/' + file_name)
-                        try:
-                            self.fileUpload('/data/' + file_name, file_name)
-                        except:
-                            logging.log(msg=time.strftime("%Y-%m-%d %H:%M:%S [WeiboSpider] ")
-                                            + "WeiboSpider" + ": failed to upload image:"
-                                            + file_name, level=logging.INFO)
-                        mblog['pics'][i] = '/data/' + file_name
-                else:
-                    mblog['pics'] = None
-                #  下载视频
-                if self.crawl_video:
-                    if 'page_info' in mblog and mblog['page_info']['type'] == 'video':
-                        video_url = mblog['page_info']['media_info']['stream_url_hd']
-                        file_name = self.__task_id + '_' + mblog['mid']+'.mp4'
-                        # self.mongo.save_video(video_url, file_name)
-                        # mblog['video'] = file_name
-                        try:
-                            res = requests.get(video_url, stream=True)
-                            with open('/data/'+file_name, "wb") as mp4:
-                                for chunk in res.iter_content(
-                                        chunk_size=1024 * 1024):
-                                    if chunk:
-                                        mp4.write(chunk)
-                            if os.path.getsize('/data/' + file_name) > 500 * 1024:
-                                self.fileUpload('/data/' + file_name, file_name)
-                                mblog['video'] = '/data/' + file_name
-                            else:
-                                mblog['video'] = None
-                        except:
-                            logging.log(msg=time.strftime("%Y-%m-%d %H:%M:%S [WeiboSpider] ")
-                                            + "WeiboSpider" + ": failed to upload video:"
-                                            + file_name, level=logging.INFO)
-                            mblog['video'] = None
+                detail_url = "https://m.weibo.cn/detail/" + mblog['mid']
+                yield scrapy.Request(url=detail_url, callback=self.parse_text,
+                                     meta={'post_item': mblog})
 
+
+    def parse_text(self, response):
+        user_post_item = response.meta['post_item']
+        # 爬取图片
+        if self.crawl_image:
+            for i in range(min(9, user_post_item['pic_num'])):
+                pic = user_post_item['pics'][i]
+                pic_url = 'https://wx3.sinaimg.cn/large/' + pic['pid'] + '.jpg'
+                file_name = self.__task_id + '_' + user_post_item['mid'] + '_' + str(i) + '.jpg'
+                # self.mongo.save_image(pic_url, file_name)
+                # mblog['pics'][i] = file_name
+                urlretrieve(pic_url, '/data/' + file_name)
+                try:
+                    self.fileUpload('/data/' + file_name, file_name)
+                except:
+                    logging.log(msg=time.strftime("%Y-%m-%d %H:%M:%S [WeiboSpider] ")
+                                    + "WeiboSpider" + ": failed to upload image:"
+                                    + file_name, level=logging.INFO)
+                user_post_item['pics'][i] = '/data/' + file_name
+        else:
+            user_post_item['pics'] = None
+        #  下载视频
+        if self.crawl_video:
+            if 'page_info' in user_post_item and user_post_item['page_info']['type'] == 'video':
+                video_url = user_post_item['page_info']['media_info']['stream_url_hd']
+                file_name = self.__task_id + '_' + user_post_item['mid'] + '.mp4'
+                # self.mongo.save_video(video_url, file_name)
+                # mblog['video'] = file_name
+                try:
+                    res = requests.get(video_url, stream=True)
+                    with open('/data/' + file_name, "wb") as mp4:
+                        for chunk in res.iter_content(
+                                chunk_size=1024 * 1024):
+                            if chunk:
+                                mp4.write(chunk)
+                    if os.path.getsize('/data/' + file_name) > 500 * 1024:
+                        self.fileUpload('/data/' + file_name, file_name)
+                        user_post_item['video'] = '/data/' + file_name
                     else:
-                        mblog['video'] = None
-                else:
-                    mblog['video'] = None
+                        user_post_item['video'] = None
+                except:
+                    logging.log(msg=time.strftime("%Y-%m-%d %H:%M:%S [WeiboSpider] ")
+                                    + "WeiboSpider" + ": failed to upload video:"
+                                    + file_name, level=logging.INFO)
+                    user_post_item['video'] = None
 
-                if mblog['isLongText']:
-                    longtext_url = self.__weibo_info_api['longtext_api'] + mblog['id']
-                    yield scrapy.Request(url=longtext_url, callback=self.parse_longtext,
-                                         meta={'post_item': mblog})
-                else:
-                    item = self.parse_field(mblog)
-                    yield item
-                    # precise_time_url = self.__weibo_info_api['precise_time_api'] + mblog['id']
-                    # yield scrapy.Request(url=precise_time_url, callback=self.parse_precise_time,
-                    #                      meta={'post_item': mblog})
+            else:
+                user_post_item['video'] = None
+        else:
+            user_post_item['video'] = None
+
+        if user_post_item['isLongText']:
+            longtext_url = self.__weibo_info_api['longtext_api'] + user_post_item['id']
+            yield scrapy.Request(url=longtext_url, callback=self.parse_longtext,
+                                 meta={'post_item': user_post_item})
+        else:
+            item = self.parse_field(user_post_item)
+            yield item
+
 
     def parse_longtext(self, response):
         # parser for longtext post

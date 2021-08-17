@@ -12,10 +12,24 @@
         "candidates":["True", "False"],
         "display":false
     },
+    "operation":{
+        "type":"select",
+        "necessary":true,
+        "description":"关键词运算",
+        "candidates":["and", "or"],
+        "display":false
+    },
     "crawl_video":{
         "type":"select",
         "necessary":true,
         "description":"是否爬取视频",
+        "candidates":["True", "False"],
+        "display":false
+    },
+    "schedule":{
+        "type":"select",
+        "necessary":true,
+        "description":"是否定时任务",
         "candidates":["True", "False"],
         "display":false
     },

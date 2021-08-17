@@ -136,8 +136,6 @@ class RetryMiddleware(object):
                     raise IgnoreRequest
 
     def get_random_proxy(self, type):
-        # ip_list = self.db['ipList'].find()
-        # ip_list = list(ip_list[0].keys())[1:]
         ip_list = self.PROXY_http
         ip = random.choice(ip_list)
         if type == "https":
