@@ -70,8 +70,10 @@ class KeyWordsSpider(RedisSpider):
                 # page_num = self.parse_page_num(u)
                 for i in range(5):
                     page_num = self.parse_page_num(u)
-                    if page_num > 1:
+                    if page_num > 0:
                         break
+                    else:
+                        page_num = 1
                 self.page_num = min(page_num, int(page))
                 print(self.page_num)
                 # self.page_num = 5
@@ -95,16 +97,13 @@ class KeyWordsSpider(RedisSpider):
     def parse_page_num(self, url):
         try:
             content = requests.get(url).text
+            content_dict = json.loads(content)
+            post_count = content_dict['data']['cardlistInfo']['total']
+            page_num = post_count // 10 + 1
+            return page_num
         except IOError:
             self.logger.info(msg="[weibo_info_spider] parse_page_numm error!")  # , level=logging.ERROR)
-            return 3
-        if 'data' not in content:
-            self.logger.info(msg="[weibo_info_spider] parse_page_numm error!")# , level=logging.ERROR)
-            return 3
-        content_dict = json.loads(content)
-        post_count = content_dict['data']['cardlistInfo']['total']
-        page_num = post_count//10 + 1
-        return page_num
+            return 0
 
     def parse(self, response):
         data = json.loads(response.text)['data']
