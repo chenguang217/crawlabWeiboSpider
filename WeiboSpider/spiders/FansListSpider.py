@@ -33,7 +33,7 @@ class FansListSpider(RedisSpider):
 
         if node == 'master':
             settings = get_project_settings()
-            r = redis.Redis(host=settings.get("REDIS_HOST"), port=settings.get("REDIS_PORT"), decode_responses=True)
+            r = redis.Redis(host=settings.get("REDIS_HOST"), port=settings.get("REDIS_PORT"), password=settings.get("REDIS_PARAMS")['password'], decode_responses=True)
             for u in self.__uid_list:
                 user_info_url = self.crawling_user_info(u)  # 拼接用户信息URL
                 # 获取总页数

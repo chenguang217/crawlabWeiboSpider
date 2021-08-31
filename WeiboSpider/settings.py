@@ -79,9 +79,9 @@ MONGO_PORT = 27019
 DB_NAME = 'crawlab_test'
 
 REDIS_HOST = '139.9.205.93'
-# REDIS_PARAMS = {
-#             'password': '123456',
-#         }
+REDIS_PARAMS = {
+            'password': '123456',
+        }
 REDIS_PORT = 6381
 
 # Enable or disable extensions

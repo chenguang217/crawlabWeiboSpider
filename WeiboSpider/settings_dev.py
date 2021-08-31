@@ -87,9 +87,9 @@ MONGO_PORT = 27017
 DB_NAME = 'weibo'
 
 REDIS_HOST = '127.0.0.1'
-# REDIS_PARAMS = {
-#             'password': '123456',
-#         }
+REDIS_PARAMS = {
+            'password': '123456',
+        }
 REDIS_PORT = 6379
 SCHEDULER_DUPEFILTER_KEY = '00001:dupefilter'
 

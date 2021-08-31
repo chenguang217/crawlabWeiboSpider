@@ -26,8 +26,9 @@ class ImportantUserSpider(RedisSpider):
     handle_httpstatus_list = [418]  # http status code for not ignoring
     redis_key = 'ImportantUserSpider:start_urls'
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, schedule='False', *args, **kwargs):
         super(ImportantUserSpider, self).__init__(*args, **kwargs)
+        self.schedule = strtobool(schedule)
         self.start_urls = ['https://m.weibo.cn/']
         self.time_arg = floor(time.time())  # get time seconds as the essential arguments for crawling hot searches
         self.api = {
@@ -44,7 +45,7 @@ class ImportantUserSpider(RedisSpider):
                             f'26c_type%3D30%26 display_time%3D{self.time_arg}&luicode=10000011&lfid=231583'
 
         settings = get_project_settings()
-        self.r = redis.Redis(host=settings.get("REDIS_HOST"), port=settings.get("REDIS_PORT"), decode_responses=True)
+        self.r = redis.Redis(host=settings.get("REDIS_HOST"), port=settings.get("REDIS_PORT"), password=settings.get("REDIS_PARAMS")['password'], decode_responses=True)
         request_data = {
             'url': self.target_url,
             'meta': {'repeat_times': 0},

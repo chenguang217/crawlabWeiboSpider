@@ -58,7 +58,7 @@ class KeyWordsSpider(RedisSpider):
 
         if node == 'master':
             settings = get_project_settings()
-            r = redis.Redis(host=settings.get("REDIS_HOST"), port=settings.get("REDIS_PORT"), decode_responses=True)
+            r = redis.Redis(host=settings.get("REDIS_HOST"), port=settings.get("REDIS_PORT"), password=settings.get("REDIS_PARAMS")['password'], decode_responses=True)
             time_stamp = floor(time.time())
 
             for kw in self.keywords:
