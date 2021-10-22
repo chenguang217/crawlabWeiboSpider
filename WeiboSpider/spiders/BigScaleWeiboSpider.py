@@ -75,11 +75,11 @@ class BigScaleWeiboSpider(RedisSpider):
     redis_key = 'BigScaleWeiboSpider:start_urls'
 
     def __init__(self, node='master', uu_id='1996', page=199, crawl_image='False',
-                 crawl_video='False', schedule='False', *args, **kwargs):
+                 crawl_video='False', schedule='False', task_id='test', *args, **kwargs):
         super(BigScaleWeiboSpider, self).__init__(*args, **kwargs)
         self.start_urls = ['https://m.weibo.cn/']
         self.__uid_list = self.get_important_user()
-        # self.__uid = uid
+        self.middle = task_id
         self.__task_id = uu_id
         self.__user_info_api = {'api_0': 'api/container/getIndex?type=__uid&value=', 'api_1': '&containerid=100505'}
         self.__weibo_info_api = {'api_0': 'api/container/getIndex?type=__uid&value=',
