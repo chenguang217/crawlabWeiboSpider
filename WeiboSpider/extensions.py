@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 # Define here the models for your scraped Extensions
+# -*- coding: utf-8 -*-
+# Define here the models for your scraped Extensions
 import logging
 import time
 import redis
-import pickle
-import os
+import subprocess
+import pymongo
 from scrapy import signals
 from scrapy.exceptions import NotConfigured
 from scrapy.utils.project import get_project_settings
@@ -62,28 +64,32 @@ class RedisSpiderSmartIdleClosedExensions(object):
                         '\n meet the idle shutdown conditions, will close the reptile operation'
                         '\n idle start time: {},  close spider time: {}'.format(self.idle_number,
                                                                               self.idle_list[0], self.idle_list[0]))
-            if not spider.schedule:
-                settings = get_project_settings()
-                r = redis.Redis(host=settings.get("REDIS_HOST"), port=settings.get("REDIS_PORT"), decode_responses=True)
-                try:
-                    dup_key = settings.get("SCHEDULER_DUPEFILTER_KEY")
-                    r.delete(dup_key)
-                except:
-                    pass
-            # print(spider.node)
-            # if spider.node == 'master':
-            #     print(spider.node)
-            #     settings = get_project_settings()
-            #     r = redis.Redis(host=settings.get("REDIS_HOST"), port=settings.get("REDIS_PORT"), decode_responses=True)
-            #     try:
-            #         dup_key = settings.get("SCHEDULER_DUPEFILTER_KEY")
-            #         bak_name = '/data/' + dup_key[:dup_key.index(":")] + '.bak'
-            #         if not os.path.exists(bak_name):
-            #             requests_set = r.smembers(dup_key)
-            #             with open(bak_name, 'wb') as f:
-            #                 pickle.dump(requests_set, f)
-            #             r.delete(dup_key)
-            #     except:
-            #         pass
-            # 执行关闭爬虫操作
-            self.crawler.engine.close_spider(spider, 'closespider_pagecount')
+            settings = get_project_settings()
+            r = redis.Redis(host=settings.get("REDIS_HOST"), port=settings.get("REDIS_PORT"), decode_responses=True)
+            try:
+                r.delete(spider.name + ':dupefilter')
+            except:
+                pass
+            # 将所有该Task下带起来的pproxy进程全部结束
+            task_id = spider.middle
+            myclient = pymongo.MongoClient("mongodb://139.9.205.93:27019")
+            mydb = myclient["proxy_ip"]
+            col = mydb["task_socks_pid"]
+            query = col.find_one({"Task_id": task_id})
+            if query == None:
+                self.crawler.engine.close_spider(spider, 'closespider_pagecount')
+            else:
+                task_socks_pid = query["Socks_pid"]
+                pid = task_socks_pid.split(",", )
+                for i in pid:
+                    cmd1 = 'kill -9'
+                    cmd = f'{cmd1} {i}'
+                    subp = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                            encoding='utf-8')
+                    if subp.returncode == None:
+                        print("Pproxy related processe " + str(subp.pid) + " has been killed!")
+                    else:
+                        print("error:", subp)
+                col.delete_one({"Task_id": task_id})
+                # 执行关闭爬虫操作
+                self.crawler.engine.close_spider(spider, 'closespider_pagecount')
