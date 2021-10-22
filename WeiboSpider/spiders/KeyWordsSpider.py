@@ -26,9 +26,10 @@ class KeyWordsSpider(RedisSpider):
     handle_httpstatus_list = [418]  # http status code for not ignoring
     redis_key = 'KeyWordsSpider:start_urls'
 
-    def __init__(self, keyword, node='master', uu_id='test', page=200, operation="or", crawl_image='False', crawl_video='False', important_user='False', schedule='False', *args, **kwargs):
+    def __init__(self, keyword, node='master', uu_id='test', page=200, operation="or", crawl_image='False', crawl_video='False', important_user='False', schedule='False',task_id='test', *args, **kwargs):
         super(KeyWordsSpider, self).__init__(*args, **kwargs)
         self.__task_id = uu_id
+        self.middle = task_id
         self.api = {
             'api_0': 'https://m.weibo.cn/api/container/getIndex?containerid=100103type',
             'api_1': '=61&q=',  # append keywords behind and url code this sentences
